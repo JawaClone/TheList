@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>THE LIST — 29 DE MAYO · 2025</title>
+  <meta name="description"
+    content="The List. Una noche que no se olvida. 29 de Mayo · 8:00 PM · Mariposa 8a, Vicente Guerrero. Barra Libre. Si tienes que preguntar, no estás en la lista.">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&family=Cormorant+Garamond:ital,wght@0,300;1,300;1,400;1,600&family=Space+Grotesk:wght@300;400;500;700&display=swap"
+    rel="stylesheet">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="/src/style.css">
+</head>
+
+<body>
+
+  <div class="noise" aria-hidden="true"></div>
+  <div class="cursor" id="cur" aria-hidden="true"></div>
+  <div class="cursor-dot" id="cdot" aria-hidden="true"></div>
+
+  <!-- ══════════════════════════
+       LOADER
+  ══════════════════════════ -->
+  <div id="loader">
+    <div class="loader-beam"></div>
+    <div class="loader-bar"></div>
+    <span class="loader-word">THE LIST</span>
+    <div class="loader-bar"></div>
+  </div>
+
+  <main>
+
+    <!-- ══════════════════════════
+         HERO
+    ══════════════════════════ -->
+    <section id="hero">
+      <canvas id="pc"></canvas>
+
+      <!-- Hairlines -->
+      <div class="hero-rule hero-rule-top"    aria-hidden="true"></div>
+      <div class="hero-rule hero-rule-bottom" aria-hidden="true"></div>
+
+      <!-- Corner labels -->
+      <span class="hero-corner hero-corner-tl" aria-hidden="true">THE LIST</span>
+      <span class="hero-corner hero-corner-tr" aria-hidden="true">MAYO 29 · 2025</span>
+      <span class="hero-corner hero-corner-bl" aria-hidden="true">8:00 PM · ENTRADA LIBRE</span>
+      <span class="hero-corner hero-corner-br" aria-hidden="true">SOLO INVITADOS</span>
+
+      <!-- Logo -->
+      <div class="hero-inner">
+        <img src="/logo_thelist.png" alt="THE LIST" class="hero-logo">
+        <p class="hero-tag">IF YOU GOTTA ASK, YOU'RE NOT ON THE LIST</p>
+      </div>
+
+      <!-- Botanical SVG — top-left -->
+      <svg class="bot bot-tl" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M-10 300 Q40 210 95 155 Q135 115 175 75" fill="none" stroke="rgba(200,195,175,1)" stroke-width="1.3" stroke-linecap="round"/>
+        <path d="M175 75 Q205 48 235 28 Q205 58 182 88 Q158 118 135 155 Q112 188 95 225" fill="none" stroke="rgba(200,195,175,1)" stroke-width="1.1" stroke-linecap="round"/>
+        <path d="M-10 300 Q55 232 105 162 Q155 95 195 45" fill="none" stroke="rgba(200,195,175,.55)" stroke-width=".8" stroke-linecap="round"/>
+        <path d="M55 248 Q88 228 118 208" fill="none" stroke="rgba(200,195,175,.45)" stroke-width=".7"/>
+        <path d="M85 205 Q118 185 148 165" fill="none" stroke="rgba(200,195,175,.45)" stroke-width=".7"/>
+        <path d="M50 85 Q32 125 28 175 Q24 205 30 235" fill="none" stroke="rgba(200,195,175,.65)" stroke-width="1" stroke-linecap="round"/>
+        <path d="M50 85 Q82 62 118 52 Q88 82 68 112 Q52 138 46 168" fill="none" stroke="rgba(200,195,175,.65)" stroke-width=".9" stroke-linecap="round"/>
+      </svg>
+
+      <!-- Botanical SVG — bottom-right -->
+      <svg class="bot bot-br" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M-10 300 Q40 210 95 155 Q135 115 175 75" fill="none" stroke="rgba(200,195,175,1)" stroke-width="1.3" stroke-linecap="round"/>
+        <path d="M175 75 Q205 48 235 28 Q205 58 182 88 Q158 118 135 155 Q112 188 95 225" fill="none" stroke="rgba(200,195,175,1)" stroke-width="1.1" stroke-linecap="round"/>
+        <path d="M-10 300 Q55 232 105 162 Q155 95 195 45" fill="none" stroke="rgba(200,195,175,.55)" stroke-width=".8" stroke-linecap="round"/>
+        <path d="M50 85 Q32 125 28 175 Q24 205 30 235" fill="none" stroke="rgba(200,195,175,.65)" stroke-width="1" stroke-linecap="round"/>
+      </svg>
+
+      <div class="scroll-cue" aria-hidden="true">
+        <span>SCROLL</span>
+        <div class="scroll-line"></div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════
+         CLASSIFIED DOC
+    ══════════════════════════ -->
+    <section id="classified" aria-label="Detalles clasificados">
+      <div class="doc r">
+        <span class="stamp">ACCESO RESTRINGIDO</span>
+
+        <div class="doc-row">
+          <span class="doc-lbl">FECHA</span>
+          <span class="doc-val">29 de Mayo, 2025</span>
+        </div>
+        <hr class="doc-sep">
+
+        <div class="doc-row">
+          <span class="doc-lbl">SUBJECT</span>
+          <span class="doc-val script">The List</span>
+        </div>
+        <hr class="doc-sep">
+
+        <div class="doc-row">
+          <span class="doc-lbl">HORA</span>
+          <span class="doc-val">8:00 PM</span>
+        </div>
+        <hr class="doc-sep">
+
+        <div class="doc-row">
+          <span class="doc-lbl">LUGAR</span>
+          <span class="doc-val">Mariposa 8a · Vicente Guerrero</span>
+        </div>
+        <hr class="doc-sep">
+
+        <div class="doc-row">
+          <span class="doc-lbl">ACCESO</span>
+          <span class="doc-val red">SOLO INVITADOS</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════
+         COUNTDOWN
+    ══════════════════════════ -->
+    <section id="countdown" aria-label="Cuenta regresiva">
+      <p class="cd-eyebrow r">FALTAN PARA LA NOCHE</p>
+      <div class="cd-grid r d1">
+        <div class="cd-item">
+          <div class="cd-num" id="cdD">--</div>
+          <div class="cd-unit">DÍAS</div>
+        </div>
+        <div class="cd-sep">·</div>
+        <div class="cd-item">
+          <div class="cd-num" id="cdH">--</div>
+          <div class="cd-unit">HORAS</div>
+        </div>
+        <div class="cd-sep">·</div>
+        <div class="cd-item">
+          <div class="cd-num" id="cdM">--</div>
+          <div class="cd-unit">MIN</div>
+        </div>
+        <div class="cd-sep">·</div>
+        <div class="cd-item">
+          <div class="cd-num" id="cdS">--</div>
+          <div class="cd-unit">SEG</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════
+         DETAILS GRID
+    ══════════════════════════ -->
+    <section id="details" aria-label="Detalles del evento">
+      <p class="sec-eye r">THE LIST · MAYO 2025</p>
+      <div class="det-grid">
+        <div class="det-cell r d1">
+          <p class="det-lbl">CUANDO</p>
+          <p class="det-val">29 Mayo</p>
+          <p class="det-sub">JUEVES · 8:00 PM</p>
+        </div>
+        <div class="det-cell r d2">
+          <p class="det-lbl">DONDE</p>
+          <p class="det-val">Mariposa 8a</p>
+          <p class="det-sub">VICENTE GUERRERO</p>
+        </div>
+        <div class="det-cell r d3">
+          <p class="det-lbl">BIENVENIDA</p>
+          <p class="det-val">Barra Libre</p>
+          <p class="det-sub">TODA LA NOCHE</p>
+        </div>
+        <div class="det-cell r d4">
+          <p class="det-lbl">PREVENTA</p>
+          <p class="det-val">Hasta el 8</p>
+          <p class="det-sub">DE MAYO · CUPO LIMITADO</p>
+        </div>
+      </div>
+      <div class="ast" aria-hidden="true">✳</div>
+    </section>
+
+    <!-- ══════════════════════════
+         PREVENTA / CTA
+    ══════════════════════════ -->
+    <section id="preventa" aria-label="Preventa">
+      <div class="pv-badge r">
+        <div class="pv-dot"></div>
+        <span class="pv-badge-txt">PREVENTA DISPONIBLE</span>
+      </div>
+      <h1 class="pv-h1 r d1">Una noche<br>que no se olvida</h1>
+      <p class="pv-sub r d2">HASTA EL 8 DE MAYO · CUPO MUY LIMITADO</p>
+      <div class="cta-container">
+        <a href="mailto:thelist@ejemplo.com" class="cta r d3" id="ctaBtn">SOLICITAR ACCESO</a>
+        <div class="barra r d4"><span>BARRA LIBRE INCLUIDA</span></div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════
+         FOOTER
+    ══════════════════════════ -->
+    <footer>
+      <!-- Botanical corners -->
+      <svg class="f-bot l" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M-10 300 Q40 210 95 155 Q135 115 175 75" fill="none" stroke="rgba(200,195,175,1)" stroke-width="1.5" stroke-linecap="round"/>
+        <path d="M175 75 Q205 48 235 28 Q205 58 182 88 Q158 118 135 155 Q112 188 95 225" fill="none" stroke="rgba(200,195,175,1)" stroke-width="1.3" stroke-linecap="round"/>
+        <path d="M-10 300 Q55 232 105 162 Q155 95 195 45" fill="none" stroke="rgba(200,195,175,.6)" stroke-width="1"/>
+      </svg>
+      <svg class="f-bot r" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M-10 300 Q40 210 95 155 Q135 115 175 75" fill="none" stroke="rgba(200,195,175,1)" stroke-width="1.5" stroke-linecap="round"/>
+        <path d="M175 75 Q205 48 235 28 Q205 58 182 88 Q158 118 135 155 Q112 188 95 225" fill="none" stroke="rgba(200,195,175,1)" stroke-width="1.3" stroke-linecap="round"/>
+        <path d="M-10 300 Q55 232 105 162 Q155 95 195 45" fill="none" stroke="rgba(200,195,175,.6)" stroke-width="1"/>
+      </svg>
+
+      <p class="f-quote">"If you gotta ask, you're not on the list"</p>
+      <p class="f-brand">THE LIST · MAYO 2025</p>
+    </footer>
+
+  </main>
+
+  <!-- Scripts -->
+  <script src="/src/main.js"></script>
+
+</body>
+
+</html>
