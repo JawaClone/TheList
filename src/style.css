@@ -1105,9 +1105,28 @@ footer {
   font-weight: bold;
 }
 
-.action-btn:disabled {
-  opacity: 0.3;
-  cursor: default;
+.action-btn:hover {
+  background: #c8c3af;
+  color: #000;
+  transform: translateY(-2px);
+}
+
+.filter-btn {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.4);
+  padding: 8px 20px;
+  font-size: 0.55rem;
+  letter-spacing: 0.2em;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-family: 'Space Grotesk', sans-serif;
+}
+
+.filter-btn:hover, .filter-btn.active {
+  background: rgba(200, 195, 175, 0.1);
+  border-color: #c8c3af;
+  color: #c8c3af;
 }
 
 /* REVEAL UTILITY */

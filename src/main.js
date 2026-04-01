@@ -456,177 +456,216 @@ logOutBtn.onclick = () => {
 
 // ── RENDER ADMIN LIST (REAL TIME) ──
 let adminUnsubscribe = null;
+let currentFilter = 'all'; 
+let lastUsersData = [];
 
-const startAdminRealtime = () => {
-  if (adminUnsubscribe) return; // ya escuchando
-  adminUnsubscribe = listenToAllUsers((users) => {
-    // Save to cache for bulk assign
-    window.latestUsersCache = users;
+// Esta función solo dibuja el panel basado en los filtros, no se suscribe a Firebase
+const renderAdminPanel = (users) => {
+  lastUsersData = users;
+  
+  // Calcular Estadísticas
+  const totalEmails = users.length;
+  const totalTickets = users.reduce((acc, u) => acc + (u.tickets ? u.tickets.length : 0), 0);
+  const totalPending = users.filter(u => !u.tickets || u.tickets.length === 0).length;
 
-    // Ordenar por pendientes 
-    users.sort((a, b) => ((a.ticketCode || "") === "PENDIENTE" ? -1 : 1));
+  // Llenar lista de correos (textarea oculto para copia rápida)
+  if (correosList) {
+    const allEmails = users.map(u => u.email).filter(e => e && e.trim() !== "");
+    correosList.value = [...new Set(allEmails)].join(", ");
+  }
 
-    // Llenar lista de correos
-    if (correosList) {
-      const allEmails = users.map(u => u.email).filter(e => e && e.trim() !== "");
-      // Usar Set para evitar duplicados si los hubiera
-      const uniqueEmails = [...new Set(allEmails)];
-      correosList.value = uniqueEmails.join(", ");
+  // Aplicar Filtros
+  let filteredUsers = [...users];
+  if (currentFilter === 'active') {
+     filteredUsers = users.filter(u => u.tickets && u.tickets.length > 0);
+  } else if (currentFilter === 'pending') {
+     filteredUsers = users.filter(u => !u.tickets || u.tickets.length === 0);
+  }
+
+  // Ordenar por pendientes (solo si estamos en la vista general)
+  if (currentFilter === 'all') {
+    filteredUsers.sort((a, b) => ((a.tickets?.length || 0) === 0 ? -1 : 1));
+  }
+
+  // Renderizar Cabecera de Estadísticas y Botones de Filtro
+  const statsHtml = `
+    <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:15px; margin-bottom:30px;">
+      <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1); padding:20px; text-align:center;">
+        <p style="font-size:0.5rem; letter-spacing:0.2em; opacity:0.5; margin-bottom:10px;">TOTAL INVITADOS</p>
+        <h3 style="font-size:1.8rem; margin:0; font-family:'Cormorant Garamond', serif;">${totalEmails}</h3>
+      </div>
+      <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1); padding:20px; text-align:center;">
+        <p style="font-size:0.5rem; letter-spacing:0.2em; opacity:0.5; margin-bottom:10px;">BOLETOS VENDIDOS</p>
+        <h3 style="font-size:1.8rem; margin:0; font-family:'Cormorant Garamond', serif; color:#c8c3af;">${totalTickets}</h3>
+      </div>
+      <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1); padding:20px; text-align:center;">
+        <p style="font-size:0.5rem; letter-spacing:0.2em; opacity:0.5; margin-bottom:10px;">PENDIENTES PAGO</p>
+        <h3 style="font-size:1.8rem; margin:0; font-family:'Cormorant Garamond', serif; color:#f55;">${totalPending}</h3>
+      </div>
+    </div>
+
+    <div style="display:flex; gap:10px; margin-bottom:30px; justify-content:center;">
+      <button class="filter-btn ${currentFilter==='all'?'active':''}" data-filter="all">TODOS</button>
+      <button class="filter-btn ${currentFilter==='active'?'active':''}" data-filter="active">CON BOLETO</button>
+      <button class="filter-btn ${currentFilter==='pending'?'active':''}" data-filter="pending">PENDIENTES</button>
+    </div>
+  `;
+
+  const searchPanel = `
+    <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); padding: 20px; margin-bottom: 30px; display:flex; gap:15px; align-items:flex-end;">
+      <div style="flex:1;">
+        <p style="font-size:0.6rem; letter-spacing:0.2em; color:rgba(255,255,255,0.5); margin-bottom:10px;">BUSCADOR POR CORREO</p>
+        <input type="email" id="manualEmail" placeholder="correo@ejemplo.com" style="width:100%; background:transparent; border:none; border-bottom:1px solid rgba(255,255,255,0.2); color:#fff; padding:10px 0; font-family:'Space Grotesk', sans-serif; font-size:0.8rem; outline:none;" />
+      </div>
+      <button id="manualAssignBtn" class="action-btn" style="padding:12px 20px; font-size:0.6rem;">ASIGNAR</button>
+    </div>
+    <div class="admin-grid-users">
+  `;
+
+  const gridHtml = filteredUsers.map(u => {
+    const hasTks = u.tickets && u.tickets.length > 0;
+    let ticketsDesc = "PENDIENTE";
+    if (hasTks) {
+      const usedCount = u.usedTickets ? u.usedTickets.length : 0;
+      const totalCount = u.tickets.length;
+      const availableCount = totalCount - usedCount;
+      ticketsDesc = availableCount > 0 
+        ? `${availableCount}/${totalCount} DISPONIBLE(S)` 
+        : `<span style="color:#f55;">AGOTADOS (${totalCount})</span>`;
     }
 
-    // Agregar un panel de búsqueda manual encima de la lista por si falla la vista
-    const searchPanel = `
-      <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); padding: 20px; margin-bottom: 30px; display:flex; gap:15px; align-items:flex-end;">
-        <div style="flex:1;">
-          <p style="font-size:0.6rem; letter-spacing:0.2em; color:rgba(255,255,255,0.5); margin-bottom:10px;">HABILITAR BOLETO POR CORREO (BUSCADOR)</p>
-          <input type="email" id="manualEmail" placeholder="correo@ejemplo.com" style="width:100%; background:transparent; border:none; border-bottom:1px solid rgba(255,255,255,0.2); color:#fff; padding:10px 0; font-family:'Space Grotesk', sans-serif; font-size:0.8rem; outline:none;" />
+    return `
+      <div class="admin-item">
+        <div style="margin-bottom: 10px; width: 100%;">
+           <p style="font-size:0.8rem; font-weight:bold; letter-spacing:0.1em; margin-bottom:5px;">${(u.name || "Usuario Desconocido").toUpperCase()}</p>
+           <span style="font-weight:normal; font-size:0.5rem; opacity:0.6;">${u.email || "Sin correo"}</span>
         </div>
-        <button id="manualAssignBtn" class="action-btn" style="padding:12px 20px; font-size:0.6rem;">ASIGNAR</button>
+        <div style="width: 100%; display: flex; justify-content: space-between; align-items: center; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.05);">
+           <span style="font-size:0.5rem; color:#fff; letter-spacing:0.1em;">${!hasTks ? '<span style="color:#f55;">PENDIENTE</span>' : ticketsDesc}</span>
+           <div style="display:flex; gap:10px;">
+             ${hasTks 
+                ? `
+                  <button class="action-btn remove-btn" data-uid="${u.id}" data-email="${u.email}" style="padding: 10px 15px; font-size:0.6rem; border: 1px solid rgba(255,0,0,0.3); background:rgba(255,0,0,0.05); color:#f55;">QUITAR</button>
+                  <button class="action-btn add-btn" data-uid="${u.id}" data-email="${u.email}" style="padding: 10px 15px; font-size:0.6rem; background:#fff; color:#000;">AÑADIR</button>
+                `
+                : `<button class="action-btn add-btn" data-uid="${u.id}" data-email="${u.email}" style="padding: 10px 25px; font-size:0.65rem; background:#fff; color:#000; letter-spacing:0.1em;">ACTIVAR</button>`
+             }
+             <button class="action-btn delete-user-btn" data-uid="${u.id}" data-email="${u.email}" data-ghost="${u.isGhost || false}" style="padding: 10px; background:rgba(255,255,255,0.05); color:rgba(255,255,255,0.4); border: 1px solid rgba(255,255,255,0.1);" title="ELIMINAR USUARIO POR COMPLETO">
+                <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+             </button>
+           </div>
+        </div>
       </div>
-      <div class="admin-grid-users">
     `;
+  }).join('');
 
-    const gridHtml = users.map(u => {
-      const CodeActual = u.ticketCode || "PENDIENTE";
-      const isP = CodeActual === "PENDIENTE";
-      let ticketsDesc = CodeActual;
-      if (u.tickets && u.tickets.length > 0) {
-        const usedCount = u.usedTickets ? u.usedTickets.length : 0;
-        const totalCount = u.tickets.length;
-        const availableCount = totalCount - usedCount;
-        if (availableCount > 0) {
-          ticketsDesc = `${availableCount}/${totalCount} DISPONIBLE(S)`;
+  adminList.innerHTML = statsHtml + searchPanel + gridHtml + `</div>`;
+
+  // --- LISTENERS DE INTERACCIÓN ---
+  
+  // Filtros
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.onclick = () => {
+       currentFilter = btn.dataset.filter;
+       renderAdminPanel(lastUsersData); // Re-dibujar con la misma data pero distinto filtro
+    };
+    btn.addEventListener('mouseenter', () => { const c = document.getElementById('cur'); if (c) c.classList.add('hover'); });
+    btn.addEventListener('mouseleave', () => { const c = document.getElementById('cur'); if (c) c.classList.remove('hover'); });
+  });
+
+  // Asignar Individual
+  document.querySelectorAll('.add-btn').forEach(btn => {
+    btn.onclick = async () => {
+      const uid = btn.dataset.uid;
+      const emailLabel = btn.dataset.email;
+      const isGhost = lastUsersData.find(u => u.id === uid)?.isGhost;
+      const cant = await sysPrompt(`¿Cuántos boletos ASIGNAREMOS para ${emailLabel}?`, "1");
+      if (!cant || isNaN(cant) || cant <= 0) return;
+      let res;
+      if (isGhost) {
+        res = await preAssignTickets(emailLabel, parseInt(cant));
+      } else {
+        res = await assignTicketToUser(uid, parseInt(cant));
+      }
+      if (!res.success) { await sysAlert("ERROR: " + res.error); }
+    };
+  });
+
+  // Quitar Individual
+  document.querySelectorAll('.remove-btn').forEach(btn => {
+    btn.onclick = async () => {
+      const uid = btn.dataset.uid;
+      const emailLabel = btn.dataset.email;
+      const isGhost = lastUsersData.find(u => u.id === uid)?.isGhost;
+      const cant = await sysPrompt(`¿Cuántos boletos QUEREMOS QUITAR a ${emailLabel}?`, "1");
+      if (!cant || isNaN(cant) || cant <= 0) return;
+      let res;
+      if (isGhost) {
+        res = await preRemoveTickets(emailLabel, parseInt(cant));
+      } else {
+        res = await removeTicketFromUser(uid, parseInt(cant));
+      }
+      if (!res.success) { await sysAlert("ERROR: " + res.error); }
+    };
+  });
+
+  // Buscador Manual
+  const mBtn = document.getElementById('manualAssignBtn');
+  if (mBtn) {
+    mBtn.onclick = async () => {
+      const mEmail = document.getElementById('manualEmail').value.trim();
+      if (!mEmail) { await sysAlert("Escribe un correo válido"); return; }
+      const targetEmail = mEmail.toLowerCase();
+      const foundUser = lastUsersData.find(u => (u.email || "").toLowerCase() === targetEmail);
+      const cant = await sysPrompt(`¿Cuántos boletos asignaremos a ${mEmail}?`, "1");
+      if (!cant || isNaN(cant) || cant <= 0) return;
+      if (!foundUser || foundUser.isGhost) {
+        const confirmPre = await sysConfirm("Invitado no registrado. ¿Asignar de todos modos?");
+        if (!confirmPre) return;
+        const res = await preAssignTickets(mEmail, parseInt(cant));
+        if (res.success) {
+          await sysAlert("¡BOLETOS ASIGNADOS!");
+          document.getElementById('manualEmail').value = "";
         } else {
-          ticketsDesc = `<span style="color:#f55;">AGOTADOS (${totalCount} USADOS)</span>`;
+          await sysAlert("ERROR: " + res.error);
+        }
+      } else {
+        const res = await assignTicketToUser(foundUser.id, parseInt(cant));
+        if (res.success) {
+          await sysAlert("¡BOLETOS ASIGNADOS!");
+          document.getElementById('manualEmail').value = "";
+        } else {
+          await sysAlert("ERROR: " + res.error);
         }
       }
+    };
+  }
 
-      return `
-        <div class="admin-item">
-          <div style="margin-bottom: 10px; width: 100%;">
-             <p style="font-size:0.8rem; font-weight:bold; letter-spacing:0.1em; margin-bottom:5px;">${(u.name || "Usuario Desconocido").toUpperCase()}</p>
-             <span style="font-weight:normal; font-size:0.5rem; opacity:0.6;">${u.email || "Sin correo"}</span>
-          </div>
-          <div style="width: 100%; display: flex; justify-content: space-between; align-items: center; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.05);">
-             ${isP
-          ? `<span style="color:rgba(180,0,0,0.8); font-size:0.5rem; letter-spacing:0.1em;">PENDIENTE DE PAGO</span>`
-          : `<span style="font-size:0.5rem; color:#fff; letter-spacing:0.1em;">${ticketsDesc}</span>`}
-             <div style="display:flex; gap:10px;">
-               ${u.tickets && u.tickets.length > 0 
-                  ? `
-                    <button class="action-btn remove-btn" data-uid="${u.id}" data-email="${u.email}" style="padding: 10px 15px; font-size:0.6rem; border: 1px solid rgba(255,0,0,0.3); background:rgba(255,0,0,0.05); color:#f55;">QUITAR</button>
-                    <button class="action-btn add-btn" data-uid="${u.id}" data-email="${u.email}" style="padding: 10px 15px; font-size:0.6rem; background:#fff; color:#000;">AÑADIR</button>
-                  `
-                  : `<button class="action-btn add-btn" data-uid="${u.id}" data-email="${u.email}" style="padding: 10px 25px; font-size:0.65rem; background:#fff; color:#000; letter-spacing:0.1em;">ACTIVAR</button>`
-               }
-               <button class="action-btn delete-user-btn" data-uid="${u.id}" data-email="${u.email}" data-ghost="${u.isGhost || false}" style="padding: 10px; background:rgba(255,255,255,0.05); color:rgba(255,255,255,0.4); border: 1px solid rgba(255,255,255,0.1);" title="ELIMINAR USUARIO POR COMPLETO">
-                  <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
-               </button>
-             </div>
-          </div>
-        </div>
-      `;
-    }).join('');
+  // Eliminar por completo
+  document.querySelectorAll('.delete-user-btn').forEach(btn => {
+    btn.onclick = async () => {
+      const uid = btn.dataset.uid;
+      const email = btn.dataset.email;
+      const isGhost = btn.dataset.ghost === 'true';
+      const confirmDel = await sysConfirm(`¿ELIMINAR POR COMPLETO A ${email}?`);
+      if (!confirmDel) return;
+      const res = await deleteUserFromSystem(uid, isGhost);
+      if (!res.success) { await sysAlert("ERROR AL ELIMINAR: " + res.error); }
+    };
+  });
 
-    adminList.innerHTML = searchPanel + gridHtml + `</div>`;
+  // Hover cursor
+  document.querySelectorAll('.delete-user-btn, .add-btn, .remove-btn').forEach(b => {
+    b.addEventListener('mouseenter', () => { const c = document.getElementById('cur'); if (c) c.classList.add('hover'); });
+    b.addEventListener('mouseleave', () => { const c = document.getElementById('cur'); if (c) c.classList.remove('hover'); });
+  });
+};
 
-    document.querySelectorAll('.add-btn').forEach(btn => {
-      btn.onclick = async () => {
-        const uid = btn.dataset.uid;
-        const emailLabel = btn.dataset.email;
-        const isGhost = users.find(u => u.id === uid)?.isGhost;
-
-        const cant = await sysPrompt(`¿Cuántos boletos ASIGNAREMOS para ${emailLabel}?`, "1");
-        if (!cant || isNaN(cant) || cant <= 0) return;
-
-        let res;
-        if (isGhost) {
-          res = await preAssignTickets(emailLabel, parseInt(cant));
-        } else {
-          res = await assignTicketToUser(uid, parseInt(cant));
-        }
-
-        if (!res.success) { await sysAlert("ERROR: " + res.error); }
-      };
-    });
-
-    document.querySelectorAll('.remove-btn').forEach(btn => {
-      btn.onclick = async () => {
-        const uid = btn.dataset.uid;
-        const emailLabel = btn.dataset.email;
-        const isGhost = users.find(u => u.id === uid)?.isGhost;
-
-        const cant = await sysPrompt(`¿Cuántos boletos QUEREMOS QUITAR a ${emailLabel}?`, "1");
-        if (!cant || isNaN(cant) || cant <= 0) return;
-
-        let res;
-        if (isGhost) {
-          res = await preRemoveTickets(emailLabel, parseInt(cant));
-        } else {
-          res = await removeTicketFromUser(uid, parseInt(cant));
-        }
-
-        if (!res.success) { await sysAlert("ERROR: " + res.error); }
-      };
-    });
-
-    const mBtn = document.getElementById('manualAssignBtn');
-    if (mBtn) {
-      mBtn.onclick = async () => {
-        const mEmail = document.getElementById('manualEmail').value.trim();
-        if (!mEmail) { await sysAlert("Escribe un correo válido"); return; }
-
-        const targetEmail = mEmail.toLowerCase();
-        const foundUser = users.find(u => (u.email || "").toLowerCase() === targetEmail);
-
-        const cant = await sysPrompt(`¿Cuántos boletos asignaremos a ${mEmail}?`, "1");
-        if (!cant || isNaN(cant) || cant <= 0) return;
-
-        if (!foundUser || foundUser.isGhost) {
-          const confirmPre = await sysConfirm("Este usuario es invitado o aún no se ha registrado.\n\n¿Quieres generarle sus boletos de todas formas? (Se le asignarán automáticamente en cuanto se registre).");
-          if (!confirmPre) return;
-
-          const res = await preAssignTickets(mEmail, parseInt(cant));
-          if (res.success) {
-            await sysAlert("¡BOLETOS ASIGNADOS CON ÉXITO A " + mEmail + "! Los tendrá listos en su cuenta.");
-            document.getElementById('manualEmail').value = "";
-          } else {
-            await sysAlert("ERROR: " + res.error);
-          }
-        } else {
-          const res = await assignTicketToUser(foundUser.id, parseInt(cant));
-          if (res.success) {
-            await sysAlert("¡BOLETOS ASIGNADOS CON ÉXITO A " + mEmail + "!");
-            document.getElementById('manualEmail').value = "";
-          } else {
-            await sysAlert("ERROR: " + res.error);
-          }
-        }
-      };
-    }
-
-    document.querySelectorAll('.delete-user-btn').forEach(btn => {
-      btn.onclick = async () => {
-        const uid = btn.dataset.uid;
-        const email = btn.dataset.email;
-        const isGhost = btn.dataset.ghost === 'true';
-
-        const confirmDel = await sysConfirm(`¿ELIMINAR POR COMPLETO A ${email}?\n\nEsta acción no se puede deshacer y borrará sus boletos asociados.`);
-        if (!confirmDel) return;
-
-        const res = await deleteUserFromSystem(uid, isGhost);
-        if (res.success) {
-          // Firestore actualizará automáticamente
-        } else {
-          await sysAlert("ERROR AL ELIMINAR: " + res.error);
-        }
-      };
-    });
-
-    document.querySelectorAll('.delete-user-btn, .add-btn, .remove-btn').forEach(b => {
-      b.addEventListener('mouseenter', () => { const c = document.getElementById('cur'); if (c) c.classList.add('hover'); });
-      b.addEventListener('mouseleave', () => { const c = document.getElementById('cur'); if (c) c.classList.remove('hover'); });
-    });
+const startAdminRealtime = () => {
+  if (adminUnsubscribe) return;
+  adminUnsubscribe = listenToAllUsers((users) => {
+    window.latestUsersCache = users;
+    renderAdminPanel(users);
   });
 };
 
