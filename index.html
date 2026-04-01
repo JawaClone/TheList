@@ -15,11 +15,22 @@
     href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&family=Cormorant+Garamond:ital,wght@0,300;1,300;1,400;1,600&family=Space+Grotesk:wght@300;400;500;700&display=swap"
     rel="stylesheet">
 
-  <!-- Styles -->
+  <!-- Scripts -->
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
   <link rel="stylesheet" href="/src/style.css">
 </head>
 
 <body>
+
+  <!-- ══════════════════════════
+       SCANNER OVERLAY
+       ══════════════════════════ -->
+  <div id="scannerOverlay" class="scanner-overlay" style="display:none;">
+    <div class="scanner-box r">
+      <div id="qrReader"></div>
+      <button id="closeScanner" class="age-exit-btn" style="margin-top:20px; width:100%;">CANCELAR ESCANEO</button>
+    </div>
+  </div>
 
   <!-- ══════════════════════════
        AGE VERIFICATION GATE (18+)
@@ -425,14 +436,21 @@
 
       <!-- VISTA ADMIN: VERIFICAR BOLETOS -->
       <div id="verifyArea" class="admin-view" style="display:none;">
-        <p class="admin-lbl" style="text-align:center;">ESCANEAR O INGRESAR CÓDIGO</p>
-        <div style="text-align:center; padding: 40px 20px;">
-          <input type="text" id="verifyInput" placeholder="EJ: TL-1234"
-            style="width:100%; max-width:300px; text-align:center; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.2); font-size:1.5rem; letter-spacing:0.2em; padding:15px; color:#fff; font-family:'Space Grotesk', sans-serif; text-transform:uppercase; outline:none; margin-bottom:20px;" />
-          <button id="verifyBtn" class="action-btn" style="padding:15px 30px; font-size:0.8rem;">VERIFICAR
-            BOLETO</button>
-          <div id="verifyResult" style="margin-top:30px; min-height:100px;"></div>
-        </div>
+          <p class="admin-lbl" style="text-align:center;">ESCANEAR O INGRESAR CÓDIGO</p>
+          <div style="text-align:center; padding: 40px 20px;">
+            <button id="scanBtn" class="action-btn" style="padding:20px 40px; font-size:0.9rem; margin-bottom:30px; width:100%; border-color:#c8c3af; background:rgba(200,195,175,0.05);">
+              ABRIR ESCÁNER CÁMARA
+            </button>
+            <div style="margin:20px 0; display:flex; align-items:center; gap:10px; opacity:0.3;">
+              <hr style="flex:1; border:0; border-top:1px solid #fff;">
+              <span style="font-size:0.6rem; letter-spacing:0.2em;">O INGRESA MANUALMENTE</span>
+              <hr style="flex:1; border:0; border-top:1px solid #fff;">
+            </div>
+            <input type="text" id="verifyInput" placeholder="EJ: TL-1234"
+              style="width:100%; text-align:center; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.15); font-size:1.2rem; letter-spacing:0.15em; padding:15px; color:#fff; font-family:'Space Grotesk', sans-serif; text-transform:uppercase; outline:none; margin-bottom:15px;" />
+            <button id="verifyBtn" class="action-btn" style="padding:15px 30px; font-size:0.7rem; opacity:0.8;">VERIFICAR CÓDIGO MANUAL</button>
+            <div id="verifyResult" style="margin-top:40px; min-height:100px; display:flex; flex-direction:column; align-items:center; justify-content:center;"></div>
+          </div>
       </div>
 
       <!-- VISTA ADMIN: CORREOS REGISTRADOS Y MASIVO -->

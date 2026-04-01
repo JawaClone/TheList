@@ -344,6 +344,51 @@ if (verifyBtn && verifyInput && verifyResult) {
        `;
     }
   });
+
+  // ── LÓGICA DE ESCÁNER QR ──
+  const scanBtn = document.getElementById('scanBtn');
+  const scannerOverlay = document.getElementById('scannerOverlay');
+  const closeScanner = document.getElementById('closeScanner');
+  let html5QrCode = null;
+
+  const stopScanner = async () => {
+    if (html5QrCode) {
+      try {
+        await html5QrCode.stop();
+        html5QrCode = null;
+      } catch (e) { console.warn("Error al detener el escaneo", e); }
+    }
+    scannerOverlay.style.display = 'none';
+  };
+
+  if (scanBtn) {
+    scanBtn.addEventListener('click', () => {
+      scannerOverlay.style.display = 'flex';
+      html5QrCode = new Html5Qrcode("qrReader");
+
+      const qrCodeSuccessCallback = async (decodedText, decodedResult) => {
+        // Detener el escáner al encontrar algo
+        await stopScanner();
+        
+        // Poner el texto en el input y disparar verificación
+        verifyInput.value = decodedText;
+        verifyBtn.click();
+      };
+
+      const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+
+      html5QrCode.start({ facingMode: "environment" }, config, qrCodeSuccessCallback)
+        .catch(err => {
+          console.error("Error al iniciar cámara", err);
+          sysAlert("No se pudo acceder a la cámara. Asegúrate de dar permisos.");
+          stopScanner();
+        });
+    });
+  }
+
+  if (closeScanner) {
+    closeScanner.addEventListener('click', stopScanner);
+  }
 }
 
 // ── LÓGICA DE CORREOS (COPIAR) ──
