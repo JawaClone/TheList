@@ -41,7 +41,7 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.45);
   border-radius: 50%;
   pointer-events: none;
-  z-index: 10006;
+  z-index: 30006;
   transform: translate(-50%, -50%);
   transition: width .3s, height .3s, border-color .3s;
   mix-blend-mode: difference;
@@ -54,7 +54,7 @@ body {
   background: #fff;
   border-radius: 50%;
   pointer-events: none;
-  z-index: 10007;
+  z-index: 30007;
   transform: translate(-50%, -50%);
 }
 

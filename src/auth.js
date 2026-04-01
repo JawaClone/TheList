@@ -17,7 +17,9 @@ import {
   query,
   where,
   updateDoc,
-  arrayUnion
+  arrayUnion,
+  arrayRemove,
+  deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { auth, db } from "./firebase-config.js";
 
@@ -352,7 +354,7 @@ export const fixGhostTickets = async (uid, email) => {
         await setDoc(preRef, { tickets: [] }, { merge: true });
         
         // Notificación de éxito
-        alert("¡Boletos rescatados! Tu código exclusivo acaba de ser enlazado a " + cleanEmail);
+        console.log("¡Boletos rescatados! Tu código exclusivo acaba de ser enlazado a " + cleanEmail);
      }
   } catch(e) {
      console.warn("Fallo leve en absorcion en vivo:", e);
@@ -436,4 +438,27 @@ export const verifyTicket = async (ticketCode) => {
   } catch (error) {
      return { success: false, error: "Conexión Inestable al Verificar: " + error.message };
   }
+};
+
+// ── ELIMINAR UN USUARIO O PRE-REGISTRO POR COMPLETO ──
+export const deleteUserFromSystem = async (uid, isGhost = false) => {
+  try {
+    const docRef = isGhost ? doc(db, "preRegistros", uid) : doc(db, "users", uid);
+    await deleteDoc(docRef);
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e.message };
+  }
+};
+
+export const removeSpecificTicket = async (uid, ticketCode, isGhost = false) => {
+   try {
+     const docRef = isGhost ? doc(db, "preRegistros", uid) : doc(db, "users", uid);
+     await updateDoc(docRef, {
+        tickets: arrayRemove(ticketCode)
+     });
+     return { success: true };
+   } catch(e) {
+     return { success: false, error: e.message };
+   }
 };
