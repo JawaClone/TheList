@@ -98,6 +98,68 @@ if (document.readyState === 'complete') {
   window.addEventListener('load', removeLoader);
 }
 
+
+// ── HERO ANIMATIONS ──
+const initHeroAnimations = () => {
+  const rules = document.querySelectorAll('.hero-rule');
+  const corners = document.querySelectorAll('.hero-corner');
+  
+  // Stagger rule lines
+  rules.forEach((r, idx) => {
+    setTimeout(() => { r.classList.add('drawn'); }, 200 + (idx * 250));
+  });
+
+  // Stagger corner labels
+  corners.forEach((c, idx) => {
+    setTimeout(() => { c.classList.add('shown'); }, 800 + (idx * 200));
+  });
+};
+
+
+// ── COUNTDOWN LOGIC ──
+const startCountdown = () => {
+  const target = new Date("May 29, 2026 20:00:00").getTime();
+  
+  const update = () => {
+    const now = new Date().getTime();
+    const diff = target - now;
+    
+    if (diff <= 0) {
+      document.getElementById('countdown').innerHTML = "<h2 style='color:#fff; letter-spacing:0.5em;'>EL MOMENTO HA LLEGADO</h2>";
+      return;
+    }
+    
+    const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const s = Math.floor((diff % (1000 * 60)) / 1000);
+    
+    const updateEl = (id, val) => {
+      const el = document.getElementById(id);
+      if(!el) return;
+      const newVal = val.toString().padStart(2, '0');
+      if (el.textContent !== newVal) {
+        el.classList.add('flip');
+        setTimeout(() => {
+          el.textContent = newVal;
+          el.classList.remove('flip');
+        }, 350);
+      }
+    };
+    
+    updateEl('days', d);
+    updateEl('hours', h);
+    updateEl('minutes', m);
+    updateEl('seconds', s);
+  };
+  
+  setInterval(update, 1000);
+  update();
+};
+
+startCountdown();
+
+
 // ── MODAL ELEMENTS ──
 const authModal = document.getElementById('authModal');
 const loginForm = document.getElementById('loginForm');
@@ -673,7 +735,7 @@ tickParts();
 
 // ── SCROLL REVEAL ──
 const revs = document.querySelectorAll('.r');
-const io = new IntersectionObserver(entries => { entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('in'); }); }, { threshold: 0.15 });
+const io = new IntersectionObserver(entries => { entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('on'); }); }, { threshold: 0.15 });
 revs.forEach(r => io.observe(r));
 
 // ── MAGNETIC CTA ──
