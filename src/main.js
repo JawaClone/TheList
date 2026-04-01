@@ -375,7 +375,14 @@ if (verifyBtn && verifyInput && verifyResult) {
         verifyBtn.click();
       };
 
-      const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+      const config = { 
+        fps: 15, 
+        qrbox: (viewfinderWidth, viewfinderHeight) => {
+          const minDim = Math.min(viewfinderWidth, viewfinderHeight);
+          return { width: minDim * 0.7, height: minDim * 0.7 };
+        },
+        aspectRatio: 1.0
+      };
 
       html5QrCode.start({ facingMode: "environment" }, config, qrCodeSuccessCallback)
         .catch(err => {
