@@ -451,32 +451,75 @@ onAuthStateChanged(auth, (user) => {
 
         } else if (data.tickets && data.tickets.length > 0) {
           const usedTks = data.usedTickets || [];
-          let ticketsHTML = data.tickets.map(code => {
+          let ticketsHTML = data.tickets.map((code, idx) => {
             const isUsed = usedTks.includes(code);
+            const numLabel = (idx + 1).toString().padStart(2, '0');
+            
             if (isUsed) {
               return `
-                <div style="border: 1px solid rgba(255,0,0,0.3); padding: 20px; margin-bottom: 15px; background: rgba(255,0,0,0.05); opacity: 0.6;">
-                   <p class="ticket-sub" style="margin-bottom:10px; color: #f55; letter-spacing:0.1em;">BOLETO USADO</p>
-                   <h3 class="ticket-code" style="font-size:1.5rem; text-decoration: line-through; margin:0; color: #f55;">${code}</h3>
-                   <p style="font-size: 0.6rem; margin-top: 10px; color: #f55;">Este boleto ya ha sido escaneado y no puede volver a usarse.</p>
+                <div style="position: relative; border: 1px solid rgba(255,0,0,0.3); padding: 30px; margin-bottom: 25px; background: #050505; opacity: 0.6; overflow: hidden; font-family: 'Space Grotesk', sans-serif;">
+                   <!-- Watermark -->
+                   <div style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%) rotate(-15deg); font-family:'Cormorant Garamond', serif; font-size:4rem; color:rgba(255,0,0,0.05); font-weight:bold; white-space:nowrap; pointer-events:none;">INVALIDATED</div>
+                   
+                   <p style="margin:0 0 10px 0; color: #f55; letter-spacing:0.2em; font-size:0.6rem;">DOC NO. ${numLabel} // TICKET USADO</p>
+                   <h3 style="font-size:2rem; text-decoration: line-through; margin:10px 0; color: #f55; font-family:'Cormorant Garamond', serif; font-weight: 300; letter-spacing:0.1em;">${code}</h3>
+                   <div style="border-top:1px dashed rgba(255,0,0,0.3); margin-top:15px; padding-top:15px;">
+                      <p style="font-size: 0.5rem; margin:0; color: rgba(255,0,0,0.7); letter-spacing:0.1em; line-height:1.4;">[ SEGURIDAD ALERTA ] ESTE CÓDIGO YA HA SIDO INGRESADO EN EL SISTEMA.<br>HA SIDO REVOCADO PERMANENTEMENTE.</p>
+                   </div>
                 </div>
               `;
             } else {
               return `
-                <div style="border: 1px solid rgba(0,255,100,0.3); padding: 20px; margin-bottom: 15px; background: rgba(0,255,100,0.05); position: relative; overflow: hidden;">
-                   <div style="position:absolute; top: -15px; right: -25px; background: rgba(0,255,100,0.2); color: #0f0; font-size: 0.5rem; transform: rotate(45deg); padding: 25px 25px 5px 25px; letter-spacing: 0.1em; border-bottom: 1px solid rgba(0,255,100,0.3);">UN SOLO USO</div>
-                   <p class="ticket-sub" style="margin-bottom:10px; color: #0f0; letter-spacing:0.1em;">CÓDIGO DE ACCESO ÚNICO</p>
-                   <h3 class="ticket-code" style="font-size:2.5rem; margin:0; color: #fff; letter-spacing: 0.1em; text-shadow: 0 0 10px rgba(0,255,100,0.5);">${code}</h3>
-                   <p style="font-size: 0.5rem; margin-top: 15px; opacity: 0.8; line-height:1.4;">Este es tu boleto electrónico.<br>Válido para <b>1 persona</b>. Será invalidado tras ser escaneado.</p>
+                <div style="position: relative; border: 1px solid rgba(200,195,175,0.4); padding: 30px; margin-bottom: 25px; background: linear-gradient(135deg, rgba(15,15,15,1) 0%, rgba(0,0,0,1) 100%); overflow: hidden; font-family: 'Space Grotesk', sans-serif; box-shadow: 0 10px 30px rgba(0,0,0,0.8);">
+                   
+                   <!-- Watermark -->
+                   <div style="position:absolute; top:40%; left:50%; transform:translate(-50%, -50%) rotate(-10deg); font-family:'Cormorant Garamond', serif; font-size:5rem; color:rgba(200,195,175,0.03); font-weight:bold; white-space:nowrap; pointer-events:none;">THE LIST</div>
+                   
+                   <!-- Corner Accents -->
+                   <div style="position:absolute; top:10px; left:10px; width:10px; height:10px; border-top:1px solid rgba(200,195,175,0.5); border-left:1px solid rgba(200,195,175,0.5);"></div>
+                   <div style="position:absolute; top:10px; right:10px; width:10px; height:10px; border-top:1px solid rgba(200,195,175,0.5); border-right:1px solid rgba(200,195,175,0.5);"></div>
+                   <div style="position:absolute; bottom:10px; left:10px; width:10px; height:10px; border-bottom:1px solid rgba(200,195,175,0.5); border-left:1px solid rgba(200,195,175,0.5);"></div>
+                   <div style="position:absolute; bottom:10px; right:10px; width:10px; height:10px; border-bottom:1px solid rgba(200,195,175,0.5); border-right:1px solid rgba(200,195,175,0.5);"></div>
+                   
+                   <!-- Header -->
+                   <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(200,195,175,0.15); padding-bottom:10px; margin-bottom:15px; position:relative; z-index:2;">
+                     <p style="margin:0; color:rgba(200,195,175,0.6); letter-spacing:0.2em; font-size:0.5rem;">REGISTRO OFFICIAL</p>
+                     <p style="margin:0; color:rgba(200,195,175,0.6); letter-spacing:0.2em; font-size:0.5rem;">NO. ${numLabel}</p>
+                   </div>
+                   
+                   <!-- Body (Code) -->
+                   <div style="text-align:center; padding: 10px 0; position:relative; z-index:2;">
+                     <p style="margin:0 0 5px 0; color:rgba(200,195,175,0.8); font-family:'Caveat', cursive; font-size:1.5rem; letter-spacing:0.05em; opacity:0.8; transform:rotate(-3deg);">Acceso Exclusivo</p>
+                     <h3 style="font-size:2.8rem; margin:0; color:rgba(200,195,175,1); font-family:'Cormorant Garamond', serif; font-weight: 300; letter-spacing: 0.15em; text-shadow: 0 0 20px rgba(200,195,175,0.3);">${code}</h3>
+                   </div>
+                   
+                   <!-- QR Code -->
+                   <div style="text-align:center; margin: 30px 0; position:relative; z-index:2;">
+                     <div style="display:inline-block; padding:10px; background:#c8c3af; border-radius:4px; box-shadow: 0 0 20px rgba(200,195,175,0.2);">
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(code)}&color=050505&bgcolor=c8c3af" alt="QR Code" style="width:120px; height:120px; display:block;" />
+                     </div>
+                     <p style="font-size: 0.5rem; margin-top: 15px; color:rgba(200,195,175,0.4); letter-spacing:0.3em; text-transform:uppercase;">Escanear en acceso</p>
+                   </div>
+                   
+                   <!-- Footer Info -->
+                   <div style="display:flex; justify-content:space-between; align-items:flex-end; border-top:1px solid rgba(200,195,175,0.15); padding-top:10px; position:relative; z-index:2;">
+                      <div>
+                        <p style="font-size: 0.45rem; margin:0; color:rgba(200,195,175,0.5); letter-spacing:0.15em;">[ ESTRICTAMENTE PERSONAL ]</p>
+                        <p style="font-size: 0.45rem; margin:3px 0 0 0; color:rgba(200,195,175,0.5); letter-spacing:0.15em;">VÁLIDO PARA 1 (UNA) PERSONA</p>
+                      </div>
+                      <div style="text-align:right;">
+                         <p style="font-size: 0.5rem; margin:0; color:rgba(200,195,175,1); letter-spacing:0.15em; border: 1px solid rgba(200,195,175,0.4); padding:3px 8px; border-radius:2px;">UN SOLO USO</p>
+                      </div>
+                   </div>
                 </div>
               `;
             }
           }).join('');
 
           ticketArea.innerHTML = `
-            <p class="ticket-sub" style="margin-bottom:20px; color:#fff;">TUS BOLETOS</p>
+            <p class="ticket-sub" style="margin-bottom:30px; color:rgba(200,195,175,0.8); letter-spacing:0.2em; text-align:center; font-size:0.7rem;">EL DOCUMENTO HA SIDO AUTORIZADO</p>
             ${ticketsHTML}
-            <p class="ticket-sub" style="margin-top:20px;">PRESÉNTALOS EN LA ENTRADA</p>
+            <p style="text-align:center; margin-top:30px; font-size:0.5rem; color:rgba(255,255,255,0.3); letter-spacing:0.2em;">PREPARA ESTE CÓDIGO ANTES DE LLEGAR A LA PUERTA</p>
           `;
         } else {
           ticketArea.innerHTML = `
