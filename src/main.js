@@ -15,7 +15,7 @@ const showCustomModal = (type, message, defaultValue = "") => {
     const modalMessage = document.getElementById('sysModalMessage');
     const modalInput = document.getElementById('sysModalInput');
     const modalButtons = document.getElementById('sysModalButtons');
-    
+
     if (!modalOverlay) return resolve(type === 'prompt' ? window.prompt(message, defaultValue) : type === 'confirm' ? window.confirm(message) : window.alert(message));
 
     modalMessage.innerHTML = message.replace(/\n/g, '<br>');
@@ -24,11 +24,11 @@ const showCustomModal = (type, message, defaultValue = "") => {
       modalInput.value = defaultValue;
       setTimeout(() => modalInput.focus(), 100);
     }
-    
+
     modalButtons.innerHTML = '';
-    
+
     const btnStyle = "padding:12px 25px; font-family:'Space Grotesk', sans-serif; font-size:0.7rem; letter-spacing:0.1em; border:1px solid rgba(200,195,175,0.4); background:transparent; color:#c8c3af; cursor:pointer; transition:all 0.3s ease; text-transform:uppercase;";
-    
+
     const closeAndResolve = (val) => {
       modalOverlay.style.opacity = '0';
       modalBox.style.transform = 'scale(0.95)';
@@ -37,8 +37,8 @@ const showCustomModal = (type, message, defaultValue = "") => {
     };
 
     const attachHover = (b) => {
-      b.addEventListener('mouseenter', () => { const c = document.getElementById('cur'); if(c) c.classList.add('hover'); });
-      b.addEventListener('mouseleave', () => { const c = document.getElementById('cur'); if(c) c.classList.remove('hover'); });
+      b.addEventListener('mouseenter', () => { const c = document.getElementById('cur'); if (c) c.classList.add('hover'); });
+      b.addEventListener('mouseleave', () => { const c = document.getElementById('cur'); if (c) c.classList.remove('hover'); });
     };
 
     if (type === 'alert') {
@@ -103,7 +103,7 @@ if (document.readyState === 'complete') {
 const initHeroAnimations = () => {
   const rules = document.querySelectorAll('.hero-rule');
   const corners = document.querySelectorAll('.hero-corner');
-  
+
   // Stagger rule lines
   rules.forEach((r, idx) => {
     setTimeout(() => { r.classList.add('drawn'); }, 200 + (idx * 250));
@@ -118,26 +118,27 @@ const initHeroAnimations = () => {
 
 // ── COUNTDOWN LOGIC ──
 const startCountdown = () => {
-  const target = new Date("May 29, 2026 20:00:00").getTime();
-  
+  const target = new Date("2026-05-29T20:00:00").getTime();
+
   const update = () => {
     const now = new Date().getTime();
     const diff = target - now;
-    
+
     if (diff <= 0) {
-      document.getElementById('countdown').innerHTML = "<h2 style='color:#fff; letter-spacing:0.5em;'>EL MOMENTO HA LLEGADO</h2>";
+      const cdEl = document.getElementById('countdown');
+      if (cdEl) cdEl.innerHTML = "<h2 style='color:#fff; letter-spacing:0.5em;'>EL MOMENTO HA LLEGADO</h2>";
       return;
     }
-    
+
     const d = Math.floor(diff / (1000 * 60 * 60 * 24));
     const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
     const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
     const s = Math.floor((diff % (1000 * 60)) / 1000);
-    
+
     const updateEl = (id, val) => {
       const el = document.getElementById(id);
-      if(!el) return;
-      const newVal = val.toString().padStart(2, '0');
+      if (!el) return;
+      const newVal = Math.max(0, val).toString().padStart(2, '0');
       if (el.textContent !== newVal) {
         el.classList.add('flip');
         setTimeout(() => {
@@ -146,13 +147,13 @@ const startCountdown = () => {
         }, 350);
       }
     };
-    
-    updateEl('days', d);
-    updateEl('hours', h);
-    updateEl('minutes', m);
-    updateEl('seconds', s);
+
+    updateEl('cdD', d);
+    updateEl('cdH', h);
+    updateEl('cdM', m);
+    updateEl('cdS', s);
   };
-  
+
   setInterval(update, 1000);
   update();
 };
@@ -192,14 +193,16 @@ let isUserLoggedIn = false;
 window.latestUsersCache = [];
 
 // Abrir Modal/Sidebar
-ctaBtn.addEventListener('click', (e) => {
-  e.preventDefault();
-  if (isUserLoggedIn) {
-    userPortal.classList.add('open');
-  } else {
-    authModal.style.display = 'flex';
-  }
-});
+if (ctaBtn) {
+  ctaBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    if (isUserLoggedIn) {
+      userPortal.classList.add('open');
+    } else {
+      authModal.style.display = 'flex';
+    }
+  });
+}
 
 // Cerrar Modal
 closeAuth.addEventListener('click', () => { authModal.style.display = 'none'; });
@@ -388,8 +391,8 @@ setupPassToggle('toggleRegPass', 'regPass', 'eyeSlashReg');
 // Asegurar que el cursor reaccione a los iconos de ojo
 setTimeout(() => {
   document.querySelectorAll('#toggleLoginPass, #toggleRegPass').forEach(el => {
-    el.addEventListener('mouseenter', () => { const c = document.getElementById('cur'); if(c) c.classList.add('hover'); });
-    el.addEventListener('mouseleave', () => { const c = document.getElementById('cur'); if(c) c.classList.remove('hover'); });
+    el.addEventListener('mouseenter', () => { const c = document.getElementById('cur'); if (c) c.classList.add('hover'); });
+    el.addEventListener('mouseleave', () => { const c = document.getElementById('cur'); if (c) c.classList.remove('hover'); });
   });
 }, 500);
 
@@ -508,15 +511,16 @@ const startAdminRealtime = () => {
              ${isP
           ? `<span style="color:rgba(180,0,0,0.8); font-size:0.5rem; letter-spacing:0.1em;">PENDIENTE DE PAGO</span>`
           : `<span style="font-size:0.5rem; color:#fff; letter-spacing:0.1em;">${ticketsDesc}</span>`}
-             <div style="display:flex; gap:5px;">
-               ${isP || u.role === "admin"
-          ? ``
-          : `<button class="action-btn remove-btn" data-uid="${u.id}" data-email="${u.email}" style="padding: 5px 10px; font-size:0.6rem; min-width:30px; border-color:rgba(255,0,0,0.3); color:#f55;">-</button>`}
-               ${isP || u.role === "admin"
-          ? `<button class="action-btn add-btn" data-uid="${u.id}" data-email="${u.email}">ACTIVAR</button>`
-          : `<button class="action-btn add-btn" data-uid="${u.id}" data-email="${u.email}" style="padding: 5px 10px; font-size:0.6rem; min-width:30px;">+</button>`}
-               <button class="action-btn delete-user-btn" data-uid="${u.id}" data-email="${u.email}" data-ghost="${u.isGhost || false}" style="padding: 5px 10px; font-size: 0.6rem; min-width: 30px; background:rgba(200,30,30,0.1); color:#f55; border-color:rgba(200,30,30,0.3);" title="ELIMINAR USUARIO">
-                  <svg viewBox="0 0 24 24" width="10" height="10" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+             <div style="display:flex; gap:10px;">
+               ${u.tickets && u.tickets.length > 0 
+                  ? `
+                    <button class="action-btn remove-btn" data-uid="${u.id}" data-email="${u.email}" style="padding: 10px 15px; font-size:0.6rem; border: 1px solid rgba(255,0,0,0.3); background:rgba(255,0,0,0.05); color:#f55;">QUITAR</button>
+                    <button class="action-btn add-btn" data-uid="${u.id}" data-email="${u.email}" style="padding: 10px 15px; font-size:0.6rem; background:#fff; color:#000;">AÑADIR</button>
+                  `
+                  : `<button class="action-btn add-btn" data-uid="${u.id}" data-email="${u.email}" style="padding: 10px 25px; font-size:0.65rem; background:#fff; color:#000; letter-spacing:0.1em;">ACTIVAR</button>`
+               }
+               <button class="action-btn delete-user-btn" data-uid="${u.id}" data-email="${u.email}" data-ghost="${u.isGhost || false}" style="padding: 10px; background:rgba(255,255,255,0.05); color:rgba(255,255,255,0.4); border: 1px solid rgba(255,255,255,0.1);" title="ELIMINAR USUARIO POR COMPLETO">
+                  <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
                </button>
              </div>
           </div>
@@ -612,7 +616,7 @@ const startAdminRealtime = () => {
 
         const res = await deleteUserFromSystem(uid, isGhost);
         if (res.success) {
-           // Firestore actualizará automáticamente
+          // Firestore actualizará automáticamente
         } else {
           await sysAlert("ERROR AL ELIMINAR: " + res.error);
         }
@@ -620,8 +624,8 @@ const startAdminRealtime = () => {
     });
 
     document.querySelectorAll('.delete-user-btn, .add-btn, .remove-btn').forEach(b => {
-      b.addEventListener('mouseenter', () => { const c = document.getElementById('cur'); if(c) c.classList.add('hover'); });
-      b.addEventListener('mouseleave', () => { const c = document.getElementById('cur'); if(c) c.classList.remove('hover'); });
+      b.addEventListener('mouseenter', () => { const c = document.getElementById('cur'); if (c) c.classList.add('hover'); });
+      b.addEventListener('mouseleave', () => { const c = document.getElementById('cur'); if (c) c.classList.remove('hover'); });
     });
   });
 };
@@ -632,7 +636,7 @@ let userUnsubscribe = null;
 onAuthStateChanged(auth, (user) => {
   if (user) {
     isUserLoggedIn = true;
-    navTrigger.style.display = 'block'; 
+    navTrigger.style.display = 'block';
     userPortal.classList.add('open');
     ctaBtn.textContent = "VER MI BOLETO";
 
@@ -706,7 +710,7 @@ onAuthStateChanged(auth, (user) => {
 
   } else {
     isUserLoggedIn = false;
-    navTrigger.style.display = 'none'; 
+    navTrigger.style.display = 'none';
     ctaBtn.textContent = "SOLICITAR ACCESO";
     userPortal.classList.remove('open');
     if (userUnsubscribe) { userUnsubscribe(); userUnsubscribe = null; }
@@ -735,7 +739,11 @@ tickParts();
 
 // ── SCROLL REVEAL ──
 const revs = document.querySelectorAll('.r');
-const io = new IntersectionObserver(entries => { entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('on'); }); }, { threshold: 0.15 });
+const io = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) e.target.classList.add('on');
+  });
+}, { threshold: 0.05 }); // Threshold bajado para evitar bugs en móvil
 revs.forEach(r => io.observe(r));
 
 // ── MAGNETIC CTA ──
