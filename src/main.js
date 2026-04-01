@@ -5,7 +5,7 @@
 // ══════════════════════════════════════════
 import { auth } from "./firebase-config.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { registerUser, loginUser, logoutUser, listenToUser, listenToAllUsers, assignTicketToUser, preAssignTickets, verifyTicket } from "./auth.js";
+import { registerUser, loginUser, logoutUser, listenToUser, listenToAllUsers, assignTicketToUser, preAssignTickets, removeTicketFromUser, preRemoveTickets, verifyTicket, fixGhostTickets } from "./auth.js";
 
 
 // ── LOADER LOGIC ──
@@ -42,8 +42,17 @@ const portalUser = document.getElementById('portalUser');
 const dashNav = document.getElementById('dashNav');
 const btnBoletos = document.getElementById('btnBoletos');
 const btnAdmin = document.getElementById('btnAdmin');
+const btnCorreos = document.getElementById('btnCorreos');
+const correosArea = document.getElementById('correosArea');
+const correosList = document.getElementById('correosList');
+const copyEmailsBtn = document.getElementById('copyEmailsBtn');
+
+const bulkEmailInput = document.getElementById('bulkEmailInput');
+const bulkTicketCount = document.getElementById('bulkTicketCount');
+const bulkAssignBtn = document.getElementById('bulkAssignBtn');
 
 let isUserLoggedIn = false;
+window.latestUsersCache = [];
 
 // Abrir Modal/Sidebar
 ctaBtn.addEventListener('click', (e) => {
@@ -75,9 +84,11 @@ btnBoletos.addEventListener('click', () => {
   btnBoletos.classList.add('active');
   btnAdmin.classList.remove('active');
   if(btnVerificar) btnVerificar.classList.remove('active');
+  if(btnCorreos) btnCorreos.classList.remove('active');
   ticketArea.style.display = 'block';
   adminArea.style.display = 'none';
   if(verifyArea) verifyArea.style.display = 'none';
+  if(correosArea) correosArea.style.display = 'none';
   userPortal.classList.remove('admin-mode');
 });
 
@@ -85,20 +96,38 @@ btnAdmin.addEventListener('click', () => {
   btnAdmin.classList.add('active');
   btnBoletos.classList.remove('active');
   if(btnVerificar) btnVerificar.classList.remove('active');
+  if(btnCorreos) btnCorreos.classList.remove('active');
   adminArea.style.display = 'block';
   ticketArea.style.display = 'none';
   if(verifyArea) verifyArea.style.display = 'none';
+  if(correosArea) correosArea.style.display = 'none';
   userPortal.classList.add('admin-mode');
 });
+
+if (btnCorreos) {
+  btnCorreos.addEventListener('click', () => {
+    btnCorreos.classList.add('active');
+    btnBoletos.classList.remove('active');
+    btnAdmin.classList.remove('active');
+    if(btnVerificar) btnVerificar.classList.remove('active');
+    correosArea.style.display = 'block';
+    adminArea.style.display = 'none';
+    ticketArea.style.display = 'none';
+    if(verifyArea) verifyArea.style.display = 'none';
+    userPortal.classList.add('admin-mode');
+  });
+}
 
 if (btnVerificar) {
   btnVerificar.addEventListener('click', () => {
     btnVerificar.classList.add('active');
     btnBoletos.classList.remove('active');
     btnAdmin.classList.remove('active');
+    if(btnCorreos) btnCorreos.classList.remove('active');
     verifyArea.style.display = 'block';
     adminArea.style.display = 'none';
     ticketArea.style.display = 'none';
+    if(correosArea) correosArea.style.display = 'none';
     userPortal.classList.add('admin-mode');
     setTimeout(() => verifyInput.focus(), 100);
   });
@@ -137,6 +166,62 @@ if (verifyBtn && verifyInput && verifyResult) {
          </div>
        `;
     }
+  });
+}
+
+// ── LÓGICA DE CORREOS (COPIAR) ──
+if (copyEmailsBtn && correosList) {
+  copyEmailsBtn.addEventListener('click', () => {
+    correosList.select();
+    correosList.setSelectionRange(0, 99999); 
+    try {
+      navigator.clipboard.writeText(correosList.value);
+      const originalText = copyEmailsBtn.innerHTML;
+      copyEmailsBtn.innerHTML = "<span style='color:#0f0'>¡COPIADOS!</span>";
+      setTimeout(() => { copyEmailsBtn.innerHTML = originalText; }, 2000);
+    } catch (err) {
+      alert("Error al intentar copiar.");
+    }
+  });
+}
+
+// ── LÓGICA DE ASIGNACIÓN MASIVA ──
+if (bulkAssignBtn && bulkEmailInput && bulkTicketCount) {
+  bulkAssignBtn.addEventListener('click', async () => {
+    const rawEmails = bulkEmailInput.value;
+    const count = parseInt(bulkTicketCount.value);
+    
+    if (!rawEmails.trim()) return alert("Por favor ingresa al menos un correo.");
+    if (!count || isNaN(count) || count < 1) return alert("La cantidad de boletos debe ser al menos 1.");
+    
+    const emailArray = [...new Set(rawEmails.split(/[\n,]+/).map(e => e.trim().toLowerCase()).filter(e => e.includes("@") && e.includes(".")))];
+    
+    if (emailArray.length === 0) return alert("No se detectaron correos válidos en la lista.");
+    
+    if (!confirm(`¿Admitir a ${emailArray.length} invitado(s) asignándoles ${count} boleto(s) a cada uno?`)) return;
+    
+    const originalText = bulkAssignBtn.innerHTML;
+    bulkAssignBtn.innerHTML = "ENVIANDO BOLETOS...";
+    bulkAssignBtn.disabled = true;
+    
+    let successCount = 0;
+    
+    for (const email of emailArray) {
+      const foundUser = window.latestUsersCache.find(u => (u.email || "").toLowerCase() === email);
+      
+      if (!foundUser || foundUser.isGhost) {
+         const res = await preAssignTickets(email, count);
+         if(res.success) successCount++;
+      } else {
+         const res = await assignTicketToUser(foundUser.id, count);
+         if(res.success) successCount++;
+      }
+    }
+    
+    alert(`¡PROCESO COMPLETADO!\n\nSe enviaron exitosamente correos/boletos a ${successCount} de ${emailArray.length} cuentas.`);
+    bulkAssignBtn.innerHTML = originalText;
+    bulkAssignBtn.disabled = false;
+    bulkEmailInput.value = "";
   });
 }
 
@@ -189,8 +274,19 @@ let adminUnsubscribe = null;
 const startAdminRealtime = () => {
   if (adminUnsubscribe) return; // ya escuchando
   adminUnsubscribe = listenToAllUsers((users) => {
+    // Save to cache for bulk assign
+    window.latestUsersCache = users;
+
     // Ordenar por pendientes 
     users.sort((a,b) => ((a.ticketCode||"") === "PENDIENTE" ? -1 : 1));
+
+    // Llenar lista de correos
+    if (correosList) {
+       const allEmails = users.map(u => u.email).filter(e => e && e.trim() !== "");
+       // Usar Set para evitar duplicados si los hubiera
+       const uniqueEmails = [...new Set(allEmails)];
+       correosList.value = uniqueEmails.join(", ");
+    }
 
     // Agregar un panel de búsqueda manual encima de la lista por si falla la vista
     const searchPanel = `
@@ -207,7 +303,17 @@ const startAdminRealtime = () => {
     const gridHtml = users.map(u => {
       const CodeActual = u.ticketCode || "PENDIENTE";
       const isP = CodeActual === "PENDIENTE";
-      const countLabel = u.tickets && u.tickets.length > 0 ? u.tickets.length + ' BOLETO(S)' : CodeActual;
+      let ticketsDesc = CodeActual;
+      if (u.tickets && u.tickets.length > 0) {
+        const usedCount = u.usedTickets ? u.usedTickets.length : 0;
+        const totalCount = u.tickets.length;
+        const availableCount = totalCount - usedCount;
+        if (availableCount > 0) {
+           ticketsDesc = `${availableCount}/${totalCount} DISPONIBLE(S)`;
+        } else {
+           ticketsDesc = `<span style="color:#f55;">AGOTADOS (${totalCount} USADOS)</span>`;
+        }
+      }
       
       return `
         <div class="admin-item">
@@ -218,10 +324,15 @@ const startAdminRealtime = () => {
           <div style="width: 100%; display: flex; justify-content: space-between; align-items: center; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.05);">
              ${isP 
                ? `<span style="color:rgba(180,0,0,0.8); font-size:0.5rem; letter-spacing:0.1em;">PENDIENTE DE PAGO</span>`
-               : `<span style="font-size:0.5rem; color:#fff; letter-spacing:0.1em;">${countLabel}</span>`}
-             ${isP || u.role === "admin" 
-               ? `<button class="action-btn" data-uid="${u.id}" data-email="${u.email}">ACTIVAR</button>` 
-               : `<button class="action-btn" data-uid="${u.id}" data-email="${u.email}">+ AGREGAR</button>`}
+               : `<span style="font-size:0.5rem; color:#fff; letter-spacing:0.1em;">${ticketsDesc}</span>`}
+             <div style="display:flex; gap:5px;">
+               ${isP || u.role === "admin" 
+                 ? `` 
+                 : `<button class="action-btn remove-btn" data-uid="${u.id}" data-email="${u.email}" style="padding: 5px 10px; font-size:0.6rem; min-width:30px; border-color:rgba(255,0,0,0.3); color:#f55;">-</button>`}
+               ${isP || u.role === "admin" 
+                 ? `<button class="action-btn add-btn" data-uid="${u.id}" data-email="${u.email}">ACTIVAR</button>` 
+                 : `<button class="action-btn add-btn" data-uid="${u.id}" data-email="${u.email}" style="padding: 5px 10px; font-size:0.6rem; min-width:30px;">+</button>`}
+             </div>
           </div>
         </div>
       `;
@@ -229,15 +340,13 @@ const startAdminRealtime = () => {
 
     adminList.innerHTML = searchPanel + gridHtml + `</div>`;
 
-    document.querySelectorAll('.action-btn').forEach(btn => {
-      // Ignorar los botones que no sean para asignar
-      if(btn.id === 'manualAssignBtn' || btn.id === 'verifyBtn') return;
+    document.querySelectorAll('.add-btn').forEach(btn => {
       btn.onclick = async () => {
         const uid = btn.dataset.uid;
         const emailLabel = btn.dataset.email;
         const isGhost = users.find(u => u.id === uid)?.isGhost;
 
-        const cant = prompt(`¿Cuántos boletos asignaremos para ${emailLabel}?`, "1");
+        const cant = prompt(`¿Cuántos boletos ASIGNAREMOS para ${emailLabel}?`, "1");
         if(!cant || isNaN(cant) || cant <= 0) return;
 
         let res;
@@ -250,6 +359,27 @@ const startAdminRealtime = () => {
         if(!res.success) { alert("ERROR: " + res.error); }
       };
     });
+
+    document.querySelectorAll('.remove-btn').forEach(btn => {
+      btn.onclick = async () => {
+        const uid = btn.dataset.uid;
+        const emailLabel = btn.dataset.email;
+        const isGhost = users.find(u => u.id === uid)?.isGhost;
+
+        const cant = prompt(`¿Cuántos boletos QUEREMOS QUITAR a ${emailLabel}?`, "1");
+        if(!cant || isNaN(cant) || cant <= 0) return;
+
+        let res;
+        if(isGhost) {
+           res = await preRemoveTickets(emailLabel, parseInt(cant));
+        } else {
+           res = await removeTicketFromUser(uid, parseInt(cant));
+        }
+
+        if(!res.success) { alert("ERROR: " + res.error); }
+      };
+    });
+
 
     const mBtn = document.getElementById('manualAssignBtn');
     if(mBtn) {
@@ -302,47 +432,49 @@ onAuthStateChanged(auth, (user) => {
 
     if (userUnsubscribe) userUnsubscribe();
     
+    // Auto rescate de boletos: Si el admin le asignó boletos por correo antes o después de que entrara
+    fixGhostTickets(user.uid, user.email);
+    
     userUnsubscribe = listenToUser(user.uid, (data) => {
       if (data) {
         portalUser.textContent = (data.name || "Usuario").toUpperCase();
 
         // View para el Boleto
-        if (data.ticketCode === "PENDIENTE") {
+        if (data.ticketCode === "PENDIENTE" && (!data.tickets || data.tickets.length === 0)) {
           ticketArea.innerHTML = `
             <p class="ticket-sub" style="color:rgba(180,0,0,0.8); margin-bottom:20px;">PENDIENTE DE PAGO</p>
             <div style="font-size:0.6rem; color:rgba(255,255,255,0.4);">Tu cuenta está bajo revisión.<br><br> Envía tu comprobante de compra y activaremos tu código.</div>
           `;
 
-          // Auto-absorb en vivo: si el admin asignó un boleto pero no corrió el login de cero, jalarlo aquí.
-          if (!data.tickets || data.tickets.length === 0) {
-            import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js").then(({ doc, getDoc, setDoc }) => {
-                import("./firebase-config.js").then(async ({ db }) => {
-                   try {
-                     const preRef = doc(db, "preRegistros", user.email.toLowerCase().trim());
-                     const preSnap = await getDoc(preRef);
-                     if (preSnap.exists() && preSnap.data().tickets && preSnap.data().tickets.length > 0) {
-                        const extraTickets = preSnap.data().tickets;
-                        await setDoc(doc(db, "users", user.uid), {
-                           ticketCode: "ACTIVO",
-                           tickets: [...(data.tickets||[]), ...extraTickets]
-                        }, { merge: true });
-                        await setDoc(preRef, { tickets: [] }, { merge: true });
-                     }
-                   } catch(e) {}
-                });
-            });
-          }
+          // Auto rescate asíncrono removido, delegando a la montura del Hook principal
+
 
         } else if (data.tickets && data.tickets.length > 0) {
-          let ticketsHTML = data.tickets.map(code => `
-            <div style="border: 1px solid rgba(255,255,255,0.1); padding: 20px; margin-bottom: 15px;">
-               <p class="ticket-sub" style="margin-bottom:10px;">CÓDIGO DE ACCESO</p>
-               <h3 class="ticket-code" style="font-size:2.5rem; margin:0;">${code}</h3>
-            </div>
-          `).join('');
+          const usedTks = data.usedTickets || [];
+          let ticketsHTML = data.tickets.map(code => {
+            const isUsed = usedTks.includes(code);
+            if (isUsed) {
+              return `
+                <div style="border: 1px solid rgba(255,0,0,0.3); padding: 20px; margin-bottom: 15px; background: rgba(255,0,0,0.05); opacity: 0.6;">
+                   <p class="ticket-sub" style="margin-bottom:10px; color: #f55; letter-spacing:0.1em;">BOLETO USADO</p>
+                   <h3 class="ticket-code" style="font-size:1.5rem; text-decoration: line-through; margin:0; color: #f55;">${code}</h3>
+                   <p style="font-size: 0.6rem; margin-top: 10px; color: #f55;">Este boleto ya ha sido escaneado y no puede volver a usarse.</p>
+                </div>
+              `;
+            } else {
+              return `
+                <div style="border: 1px solid rgba(0,255,100,0.3); padding: 20px; margin-bottom: 15px; background: rgba(0,255,100,0.05); position: relative; overflow: hidden;">
+                   <div style="position:absolute; top: -15px; right: -25px; background: rgba(0,255,100,0.2); color: #0f0; font-size: 0.5rem; transform: rotate(45deg); padding: 25px 25px 5px 25px; letter-spacing: 0.1em; border-bottom: 1px solid rgba(0,255,100,0.3);">UN SOLO USO</div>
+                   <p class="ticket-sub" style="margin-bottom:10px; color: #0f0; letter-spacing:0.1em;">CÓDIGO DE ACCESO ÚNICO</p>
+                   <h3 class="ticket-code" style="font-size:2.5rem; margin:0; color: #fff; letter-spacing: 0.1em; text-shadow: 0 0 10px rgba(0,255,100,0.5);">${code}</h3>
+                   <p style="font-size: 0.5rem; margin-top: 15px; opacity: 0.8; line-height:1.4;">Este es tu boleto electrónico.<br>Válido para <b>1 persona</b>. Será invalidado tras ser escaneado.</p>
+                </div>
+              `;
+            }
+          }).join('');
 
           ticketArea.innerHTML = `
-            <p class="ticket-sub" style="margin-bottom:20px; color:#fff;">TUS BOLETOS APROBADOS</p>
+            <p class="ticket-sub" style="margin-bottom:20px; color:#fff;">TUS BOLETOS</p>
             ${ticketsHTML}
             <p class="ticket-sub" style="margin-top:20px;">PRESÉNTALOS EN LA ENTRADA</p>
           `;
@@ -364,7 +496,22 @@ onAuthStateChanged(auth, (user) => {
           ticketArea.style.display = 'block';
         }
       } else {
-        ticketArea.innerHTML = `<p class="ticket-msg">INFORMACIÓN NO ENCONTRADA.<br><span style="font-size:0.5rem">Si estás offline, reconecta e intenta refrescar la página.</span></p>`;
+        ticketArea.innerHTML = `
+          <p class="ticket-msg">INFORMACIÓN NO ENCONTRADA.<br><span style="font-size:0.5rem">Tu boleto podría estar alojado bajo otro correo o en la bóveda de pre-registro.</span></p>
+          <button id="forceSyncBtn" class="action-btn" style="margin-top:20px; padding: 15px; width: 100%; font-size:0.8rem; border:1px solid rgba(255,255,255,0.3); background:rgba(0,0,0,0.8); cursor:pointer;">RESCATAR MIS BOLETOS</button>
+        `;
+        
+        setTimeout(() => {
+           const btnSync = document.getElementById("forceSyncBtn");
+           if(btnSync && user) {
+              btnSync.onclick = async () => {
+                 btnSync.textContent = "SINCRONIZANDO...";
+                 await fixGhostTickets(user.uid, user.email);
+                 alert("Proceso de sincronización finalizado. Tu cuenta ha sido reparada. Haz click para continuar.");
+                 location.reload();
+              };
+           }
+        }, 100);
       }
     });
 

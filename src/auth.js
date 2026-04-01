@@ -21,8 +21,15 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { auth, db } from "./firebase-config.js";
 
-// Generar código de boleto único (ej: TL-1234)
-const generateTicketCode = () => `TL-${Math.floor(1000 + Math.random() * 9000)}`;
+const generateTicketCode = () => {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let randomStr = '';
+  for (let i = 0; i < 6; i++) {
+    randomStr += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  const timeHex = (Date.now() % 100000).toString(36).toUpperCase();
+  return `TL-${randomStr}-${timeHex}`;
+};
 
 // ── REGISTRO ──
 export const registerUser = async (email, password, name) => {
@@ -55,6 +62,22 @@ export const registerUser = async (email, password, name) => {
       tickets: initialTickets,
       createdAt: new Date()
     });
+
+    // ── MAGIA: Sincronizar usuario recién registrado con el backend en Java
+    try {
+      const response = await fetch("http://localhost:8080/api/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: name, email: email })
+      });
+      if(response.ok) {
+        console.log("✅ Usuario respaldado en el ecosistema Java (Spring Boot)");
+      } else {
+        console.warn("⚠️ Backend Java respondió con error en la sincronización del registro.");
+      }
+    } catch (backendError) {
+      console.error("⛔ Backend Java no detectado. ¿Seguro que está encendido en el puerto 8080?", backendError);
+    }
 
     return { success: true, user };
   } catch (error) {
@@ -123,13 +146,7 @@ export const loginUser = async (email, password) => {
           }, { merge: true });
 
         } catch(getErr) {
-          console.warn("Offline fallback al obtener usuario en login.", getErr);
-          // Actualizamos solo nombre para asegurar que la vista no explote, SIN SOBRESCRIBIR boletos
-          await setDoc(docRef, {
-            name: "USUARIO (RECONECTADO)",
-            email: email,
-            role: "user"
-          }, { merge: true });
+          console.warn("Offline fallback al obtener usuario en login resuelto de forma segura.", getErr);
         }
       }
     } catch (dbError) {
@@ -149,7 +166,16 @@ export const logoutUser = () => signOut(auth);
 export const listenToUser = (uid, callback) => {
   try {
     const unsubscribe = onSnapshot(doc(db, "users", uid), (docSnap) => {
-      callback(docSnap.exists() ? docSnap.data() : null);
+      if (docSnap.exists()) {
+         const data = docSnap.data();
+         // Prevenir los molestos guiones `--` que parecen emojis 
+         if (!data.ticketCode && (!data.tickets || data.tickets.length === 0)) {
+            data.ticketCode = "PENDIENTE";
+         }
+         callback(data);
+      } else {
+         callback(null);
+      }
     }, (error) => {
       console.warn("Error offline o de permisos al leer la DB del usuario:", error);
       callback(null);
@@ -196,6 +222,42 @@ export const assignTicketToUser = async (uid, amount = 1) => {
   }
 };
 
+// ── QUITAR BOLETO(S) (SOLO ADMIN) ──
+export const removeTicketFromUser = async (uid, amount = 1) => {
+  try {
+    const userDocRef = doc(db, "users", uid);
+    const snap = await getDoc(userDocRef);
+    if(!snap.exists()) return { success: false, error: "Usuario no encontrado" };
+    
+    const data = snap.data();
+    let tks = data.tickets || [];
+    const usedTks = data.usedTickets || [];
+    
+    // Filtrar los que no están usados
+    let activas = tks.filter(t => !usedTks.includes(t));
+    if(activas.length === 0) return { success: false, error: "No tiene boletos activos para remover" };
+    
+    // Remover cantidad solicitada
+    const toRemove = Math.min(amount, activas.length);
+    for(let i=0; i<toRemove; i++) {
+        activas.pop(); // quitar del final
+    }
+    
+    // Combinar los usados con los activos restantes
+    const finalTks = [...usedTks, ...activas];
+    const newCode = finalTks.length > 0 ? "ACTIVO" : "PENDIENTE";
+    
+    await setDoc(userDocRef, {
+      ticketCode: newCode,
+      tickets: finalTks
+    }, { merge: true });
+
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+};
+
 // ── OBTENER TODOS LOS USUARIOS (DASHBOARD) ──
 export const listenToAllUsers = (callback) => {
   let latestUsers = [];
@@ -237,7 +299,7 @@ export const listenToAllUsers = (callback) => {
       users.push({
         id: docSnap.id,
         name: data.name,
-        email: data.email,
+        email: data.email ? data.email.trim() : "",
         ticketCode: tCode,
         tickets: tks,
         role: data.role,
@@ -253,12 +315,12 @@ export const listenToAllUsers = (callback) => {
     querySnapshot.forEach((docSnap) => {
       const data = docSnap.data();
       pres.push({
-        id: docSnap.id, // el id aquí es el correo en minusculas
+        id: docSnap.id, 
         name: "INVITADO PENDIENTE DE REGISTRO",
-        email: data.email,
+        email: data.email ? data.email.trim() : "",
         ticketCode: (data.tickets && data.tickets.length > 0) ? "ACTIVO" : "FLOTANTE",
         tickets: data.tickets || [],
-        isGhost: true, // bandera para saber que aún no completan registro
+        isGhost: true, 
         createdAt: data.createdAt
       });
     });
@@ -267,6 +329,37 @@ export const listenToAllUsers = (callback) => {
   });
 
   return () => { unsubUsers(); unsubPre(); };
+};
+
+// ── RUTINA SEGURA PARA ABSORBER BOLETOS FLOTANTES ──
+export const fixGhostTickets = async (uid, email) => {
+  if(!email) return;
+  try {
+     const cleanEmail = email.toLowerCase().trim();
+     const preRef = doc(db, "preRegistros", cleanEmail);
+     const preSnap = await getDoc(preRef);
+     
+     if (preSnap.exists() && preSnap.data().tickets && preSnap.data().tickets.length > 0) {
+        const extraTickets = preSnap.data().tickets;
+        
+        // Empujar boletos al perfil real
+        await setDoc(doc(db, "users", uid), {
+           ticketCode: "ACTIVO",
+           tickets: arrayUnion(...extraTickets)
+        }, { merge: true });
+        
+        // Limpiarlos de preRegistros
+        await setDoc(preRef, { tickets: [] }, { merge: true });
+        
+        // Notificación de éxito
+        alert("¡Boletos rescatados! Tu código exclusivo acaba de ser enlazado a " + cleanEmail);
+     }
+  } catch(e) {
+     console.warn("Fallo leve en absorcion en vivo:", e);
+     if (e.message.includes("permission") || e.message.includes("Missing")) {
+         alert("Firebase bloqueó el rescate del boleto por falta de permisos (Reglas de Firestore). Dile a tu programador.");
+     }
+  }
 };
 
 // ── PRE-ASIGNAR BOLETO A CUENTAS QUE NO EXISTEN (AUN) EN LA DB ──
@@ -287,6 +380,28 @@ export const preAssignTickets = async (email, amount = 1) => {
     }, { merge: true });
 
     return { success: true, tickets: newTickets };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+};
+
+// ── PRE-QUITAR BOLETO (CUENTAS FANTASMA) ──
+export const preRemoveTickets = async (email, amount = 1) => {
+  try {
+    const docRef = doc(db, "preRegistros", email.toLowerCase());
+    const snap = await getDoc(docRef);
+    if(!snap.exists() || !snap.data().tickets || snap.data().tickets.length === 0) {
+       return { success: false, error: "No tiene boletos en bóveda flotante" };
+    }
+    
+    let tks = snap.data().tickets;
+    const toRemove = Math.min(amount, tks.length);
+    for(let i=0; i<toRemove; i++) {
+        tks.pop();
+    }
+    
+    await setDoc(docRef, { tickets: tks }, { merge: true });
+    return { success: true };
   } catch (error) {
     return { success: false, error: error.message };
   }
