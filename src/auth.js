@@ -249,10 +249,10 @@ export const removeTicketFromUser = async (uid, amount = 1) => {
     const finalTks = [...usedTks, ...activas];
     const newCode = finalTks.length > 0 ? "ACTIVO" : "PENDIENTE";
     
-    await setDoc(userDocRef, {
+    await updateDoc(userDocRef, {
       ticketCode: newCode,
       tickets: finalTks
-    }, { merge: true });
+    });
 
     return { success: true };
   } catch (error) {
@@ -402,7 +402,7 @@ export const preRemoveTickets = async (email, amount = 1) => {
         tks.pop();
     }
     
-    await setDoc(docRef, { tickets: tks }, { merge: true });
+    await updateDoc(docRef, { tickets: tks });
     return { success: true };
   } catch (error) {
     return { success: false, error: error.message };

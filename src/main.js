@@ -694,7 +694,11 @@ const renderAdminPanel = (users) => {
       } else {
         res = await removeTicketFromUser(uid, parseInt(cant));
       }
-      if (!res.success) { await sysAlert("ERROR: " + res.error); }
+      if (res.success) {
+        await sysAlert("BOLETOS REMOVIDOS EXITOSAMENTE");
+      } else {
+        await sysAlert("ERROR: " + res.error);
+      }
     };
   });
 
