@@ -690,7 +690,12 @@ onAuthStateChanged(auth, (user) => {
         if (data.ticketCode === "PENDIENTE" && (!data.tickets || data.tickets.length === 0)) {
           ticketArea.innerHTML = `
             <p class="ticket-sub" style="color:rgba(180,0,0,0.8); margin-bottom:20px;">PENDIENTE DE PAGO</p>
-            <div style="font-size:0.6rem; color:rgba(255,255,255,0.4);">Tu cuenta está bajo revisión.<br><br> Envía tu comprobante de compra y activaremos tu código.</div>
+            <div style="font-size:0.6rem; color:rgba(255,255,255,0.4); margin-bottom:10px;">Tu cuenta está bajo revisión.<br><br> Por favor contacta soporte para autorizar tu acceso.</div>
+            
+            <div class="support-card-pending">
+              <p style="font-size:0.5rem; letter-spacing:0.2em; color:#fff; opacity:0.4; margin-bottom:15px;">SISTEMA CENTRAL — AUTORIZACIÓN</p>
+              <a href="https://wa.me/5214432264886?text=He%20llegado%20a%20The%20List.%20Solicito%20los%20detalles%20finales%20para%20asegurar%20mi%20acceso." target="_blank" class="support-btn-portal">CONTACTAR SOPORTE</a>
+            </div>
           `;
         } else if (data.tickets && data.tickets.length > 0) {
           const usedTks = data.usedTickets || [];
