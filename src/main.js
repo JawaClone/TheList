@@ -83,6 +83,43 @@ const sysConfirm = (msg) => showCustomModal('confirm', msg);
 const sysPrompt = (msg, def = "") => showCustomModal('prompt', msg, def);
 
 
+// ── AGE VERIFICATION ──
+const initAgeVerification = () => {
+  const gate = document.getElementById('ageGate');
+  const yesBtn = document.getElementById('ageYes');
+  const noBtn = document.getElementById('ageNo');
+
+  if (!gate) return;
+
+  if (localStorage.getItem('thelist_age_verified') === 'true') {
+    gate.style.display = 'none';
+    return;
+  }
+
+  yesBtn.addEventListener('click', () => {
+    localStorage.setItem('thelist_age_verified', 'true');
+    gate.style.opacity = '0';
+    setTimeout(() => gate.style.display = 'none', 600);
+  });
+
+  noBtn.addEventListener('click', () => {
+    window.location.href = "https://www.google.com";
+  });
+
+  // Cursor hover effects
+  const cr = document.getElementById('cur');
+  const addH = () => cr && cr.classList.add('hover');
+  const remH = () => cr && cr.classList.remove('hover');
+  
+  yesBtn.addEventListener('mouseenter', addH);
+  yesBtn.addEventListener('mouseleave', remH);
+  noBtn.addEventListener('mouseenter', addH);
+  noBtn.addEventListener('mouseleave', remH);
+};
+
+initAgeVerification();
+
+
 // ── LOADER LOGIC ──
 const removeLoader = () => {
   setTimeout(() => {
