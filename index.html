@@ -46,12 +46,12 @@
       <p class="age-eyebrow">ACCESO RESTRINGIDO</p>
       <h2 class="age-title">Confirmación<br>de Identidad</h2>
       <p class="age-desc">¿Eres mayor de edad (18+)?<br>Este evento está diseñado exclusivamente para adultos.</p>
-      
+
       <div class="age-actions">
         <button id="ageYes" class="age-main-btn">SÍ, SIENTO EL RITMO</button>
         <button id="ageNo" class="age-exit-btn">NO SOY MAYOR</button>
       </div>
-      
+
       <p class="age-footer">"If you gotta ask, you're not on the list"</p>
     </div>
   </div>
@@ -229,7 +229,7 @@
         <div class="det-cell r d1">
           <p class="det-lbl">CUANDO</p>
           <p class="det-val">29 Mayo</p>
-          <p class="det-sub">JUEVES · 8:00 PM</p>
+          <p class="det-sub">VIERNES · 8:00 PM</p>
         </div>
         <div class="det-cell r d2">
           <p class="det-lbl">DONDE</p>
@@ -436,21 +436,25 @@
 
       <!-- VISTA ADMIN: VERIFICAR BOLETOS -->
       <div id="verifyArea" class="admin-view" style="display:none;">
-          <p class="admin-lbl" style="text-align:center;">ESCANEAR O INGRESAR CÓDIGO</p>
-          <div style="text-align:center; padding: 40px 20px;">
-            <button id="scanBtn" class="action-btn" style="padding:22px 40px; font-size:0.9rem; margin-bottom:30px; width:100%; border:none; background:#c8c3af; color:#000; font-weight:bold; letter-spacing:0.25em;">
-              ABRIR ESCÁNER CÁMARA
-            </button>
-            <div style="margin:20px 0; display:flex; align-items:center; gap:10px; opacity:0.3;">
-              <hr style="flex:1; border:0; border-top:1px solid #fff;">
-              <span style="font-size:0.6rem; letter-spacing:0.2em;">O INGRESA MANUALMENTE</span>
-              <hr style="flex:1; border:0; border-top:1px solid #fff;">
-            </div>
-            <input type="text" id="verifyInput" placeholder="EJ: TL-1234"
-              style="width:100%; text-align:center; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.15); font-size:1.2rem; letter-spacing:0.15em; padding:15px; color:#fff; font-family:'Space Grotesk', sans-serif; text-transform:uppercase; outline:none; margin-bottom:15px;" />
-            <button id="verifyBtn" class="action-btn" style="padding:15px 30px; font-size:0.7rem; opacity:0.8;">VERIFICAR CÓDIGO MANUAL</button>
-            <div id="verifyResult" style="margin-top:40px; min-height:100px; display:flex; flex-direction:column; align-items:center; justify-content:center;"></div>
+        <p class="admin-lbl" style="text-align:center;">ESCANEAR O INGRESAR CÓDIGO</p>
+        <div style="text-align:center; padding: 40px 20px;">
+          <button id="scanBtn" class="action-btn"
+            style="padding:22px 40px; font-size:0.9rem; margin-bottom:30px; width:100%; border:none; background:#c8c3af; color:#000; font-weight:bold; letter-spacing:0.25em;">
+            ABRIR ESCÁNER CÁMARA
+          </button>
+          <div style="margin:20px 0; display:flex; align-items:center; gap:10px; opacity:0.3;">
+            <hr style="flex:1; border:0; border-top:1px solid #fff;">
+            <span style="font-size:0.6rem; letter-spacing:0.2em;">O INGRESA MANUALMENTE</span>
+            <hr style="flex:1; border:0; border-top:1px solid #fff;">
           </div>
+          <input type="text" id="verifyInput" placeholder="EJ: TL-1234"
+            style="width:100%; text-align:center; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.15); font-size:1.2rem; letter-spacing:0.15em; padding:15px; color:#fff; font-family:'Space Grotesk', sans-serif; text-transform:uppercase; outline:none; margin-bottom:15px;" />
+          <button id="verifyBtn" class="action-btn" style="padding:15px 30px; font-size:0.7rem; opacity:0.8;">VERIFICAR
+            CÓDIGO MANUAL</button>
+          <div id="verifyResult"
+            style="margin-top:40px; min-height:100px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+          </div>
+        </div>
       </div>
 
       <!-- VISTA ADMIN: CORREOS REGISTRADOS Y MASIVO -->
