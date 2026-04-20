@@ -1357,6 +1357,66 @@ footer {
   }
 }
 
+/* ── PHASE ALERT BANNER ── */
+.phase-alert {
+  position: relative;
+  max-width: 640px;
+  margin: 0 auto 52px;
+  padding: 20px 36px;
+  border: 1px solid rgba(180, 30, 30, 0.45);
+  background: rgba(90, 5, 5, 0.12);
+  text-align: center;
+  overflow: hidden;
+}
+
+.phase-alert::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(180, 30, 30, 0.07), transparent);
+  animation: alert-sweep 3s ease-in-out infinite;
+}
+
+@keyframes alert-sweep {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(100%);  }
+}
+
+.phase-alert-pulse {
+  position: absolute;
+  top: 50%;
+  left: 24px;
+  transform: translateY(-50%);
+  width: 7px;
+  height: 7px;
+  background: rgba(220, 40, 40, 0.9);
+  border-radius: 50%;
+  animation: blink 1.2s ease-in-out infinite;
+}
+
+.phase-alert-eyebrow {
+  font-size: 0.52rem;
+  letter-spacing: 0.45em;
+  color: rgba(200, 60, 60, 0.85);
+  margin-bottom: 8px;
+  font-weight: 700;
+}
+
+.phase-alert-msg {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(0.95rem, 2vw, 1.15rem);
+  font-style: italic;
+  font-weight: 300;
+  color: rgba(255, 255, 255, 0.78);
+  line-height: 1.4;
+}
+
+.phase-alert-msg strong {
+  color: #c8c3af;
+  font-style: normal;
+  font-weight: 400;
+}
+
 /* ══════════════════════════
    CONTACT US
    ══════════════════════════ */
