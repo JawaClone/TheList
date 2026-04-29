@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>THE LIST — 29 DE MAYO · 2026</title>
   <meta name="description"
-    content="The List. Una noche que no se olvida. 29 de Mayo · 8:00 PM · Mariposa 8a, Vicente Guerrero. Barra Libre. Si tienes que preguntar, no estás en la lista.">
+    content="The List. Una noche que no se olvida. 29 de Mayo · 8:00 PM · Valle Imperial - Mariposa 8a, Vicente Guerrero. Barra Libre. Si tienes que preguntar, no estás en la lista.">
 
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -124,7 +124,7 @@
 
         <div class="doc-row">
           <span class="doc-lbl">LUGAR</span>
-          <span class="doc-val">Mariposa 8a · Vicente Guerrero</span>
+          <span class="doc-val">Valle Imperial · Mariposa 8a · Vicente Guerrero</span>
         </div>
         <hr class="doc-sep">
 
@@ -176,7 +176,7 @@
         </div>
         <div class="det-cell r d2">
           <p class="det-lbl">DONDE</p>
-          <p class="det-val">Mariposa 8a</p>
+          <p class="det-val">Valle Imperial · Mariposa 8a</p>
           <p class="det-sub">VICENTE GUERRERO</p>
         </div>
         <div class="det-cell r d3">
@@ -308,21 +308,28 @@
 
       <!-- VISTA ADMIN: CORREOS REGISTRADOS Y MASIVO -->
       <div id="correosArea" class="admin-view" style="display:none;">
-        
+
         <!-- SECCIÓN: ASIGNACIÓN MASIVA -->
-        <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); padding: 20px; margin-bottom: 30px;">
-           <p class="admin-lbl" style="margin-bottom:10px;">ASIGNAR BOLETOS POR CORREO (MASIVO)</p>
-           <p style="font-size:0.6rem; color:rgba(255,255,255,0.5); margin-bottom:15px; line-height:1.4;">Ingresa uno o varios correos separados por comas. A cada correo se le asignará la cantidad de boletos especificada usando la Bóveda Segura de Pre-registro.</p>
-           
-           <textarea id="bulkEmailInput" placeholder="ejemplo1@gmail.com, carlos@hotmail.com, invitados@empresa.com" style="width:100%; height:80px; background:transparent; border:1px solid rgba(255,255,255,0.2); padding:10px; color:#fff; font-family:'Space Grotesk', sans-serif; font-size:0.8rem; resize:none; outline:none; margin-bottom:15px;"></textarea>
-           
-           <div style="display:flex; gap:15px; align-items:center;">
-             <div style="flex:1;">
-               <label style="font-size:0.6rem; letter-spacing:0.2em; color:rgba(255,255,255,0.5);">CANTIDAD POR CORREO:</label>
-               <input type="number" id="bulkTicketCount" value="1" min="1" max="10" style="width:100%; background:transparent; border:none; border-bottom:1px solid rgba(255,255,255,0.2); color:#fff; padding:10px 0; font-family:'Space Grotesk', sans-serif; font-size:1rem; outline:none; margin-top:5px; text-align:center;" />
-             </div>
-             <button id="bulkAssignBtn" class="action-btn" style="flex:2; padding:15px 20px; font-size:0.8rem; height:100%;">ENVIAR BOLETOS</button>
-           </div>
+        <div
+          style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); padding: 20px; margin-bottom: 30px;">
+          <p class="admin-lbl" style="margin-bottom:10px;">ASIGNAR BOLETOS POR CORREO (MASIVO)</p>
+          <p style="font-size:0.6rem; color:rgba(255,255,255,0.5); margin-bottom:15px; line-height:1.4;">Ingresa uno o
+            varios correos separados por comas. A cada correo se le asignará la cantidad de boletos especificada usando
+            la Bóveda Segura de Pre-registro.</p>
+
+          <textarea id="bulkEmailInput" placeholder="ejemplo1@gmail.com, carlos@hotmail.com, invitados@empresa.com"
+            style="width:100%; height:80px; background:transparent; border:1px solid rgba(255,255,255,0.2); padding:10px; color:#fff; font-family:'Space Grotesk', sans-serif; font-size:0.8rem; resize:none; outline:none; margin-bottom:15px;"></textarea>
+
+          <div style="display:flex; gap:15px; align-items:center;">
+            <div style="flex:1;">
+              <label style="font-size:0.6rem; letter-spacing:0.2em; color:rgba(255,255,255,0.5);">CANTIDAD POR
+                CORREO:</label>
+              <input type="number" id="bulkTicketCount" value="1" min="1" max="10"
+                style="width:100%; background:transparent; border:none; border-bottom:1px solid rgba(255,255,255,0.2); color:#fff; padding:10px 0; font-family:'Space Grotesk', sans-serif; font-size:1rem; outline:none; margin-top:5px; text-align:center;" />
+            </div>
+            <button id="bulkAssignBtn" class="action-btn"
+              style="flex:2; padding:15px 20px; font-size:0.8rem; height:100%;">ENVIAR BOLETOS</button>
+          </div>
         </div>
 
         <hr style="border:none; border-top:1px solid rgba(255,255,255,0.1); margin:30px 0;">
@@ -330,10 +337,12 @@
         <!-- SECCIÓN: EXPORTAR CORREOS -->
         <p class="admin-lbl">TODOS LOS CORREOS EN EL SISTEMA</p>
         <div style="margin-bottom:15px;">
-           <p style="font-size:0.6rem; color:rgba(255,255,255,0.5);">Lista completa (para campañas o MailChimp):</p>
+          <p style="font-size:0.6rem; color:rgba(255,255,255,0.5);">Lista completa (para campañas o MailChimp):</p>
         </div>
-        <textarea id="correosList" readonly style="width:100%; height:150px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1); padding:15px; color:#fff; font-family:monospace; font-size:0.8rem; resize:none; outline:none;">Cargando correos...</textarea>
-        <button id="copyEmailsBtn" class="action-btn" style="width:100%; margin-top:15px; padding:15px; font-size:0.8rem;">COPIAR TODOS LOS CORREOS</button>
+        <textarea id="correosList" readonly
+          style="width:100%; height:150px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1); padding:15px; color:#fff; font-family:monospace; font-size:0.8rem; resize:none; outline:none;">Cargando correos...</textarea>
+        <button id="copyEmailsBtn" class="action-btn"
+          style="width:100%; margin-top:15px; padding:15px; font-size:0.8rem;">COPIAR TODOS LOS CORREOS</button>
       </div>
     </div>
 
