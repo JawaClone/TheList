@@ -162,8 +162,10 @@ const startCountdown = () => {
     const diff = target - now;
 
     if (diff <= 0) {
-      const cdEl = document.getElementById('countdown');
-      if (cdEl) cdEl.innerHTML = "<h2 style='color:#fff; letter-spacing:0.5em;'>EL MOMENTO HA LLEGADO</h2>";
+      const activeEl = document.getElementById('countdownActive');
+      const finishedEl = document.getElementById('countdownFinished');
+      if (activeEl) activeEl.style.display = 'none';
+      if (finishedEl) finishedEl.style.display = 'block';
       return;
     }
 
@@ -230,16 +232,24 @@ let isUserLoggedIn = false;
 window.latestUsersCache = [];
 
 // Abrir Modal/Sidebar
+const handlePortalOpen = (e) => {
+  e.preventDefault();
+  if (isUserLoggedIn) {
+    userPortal.classList.add('open');
+  } else {
+    authModal.style.display = 'flex';
+  }
+};
+
 if (ctaBtn) {
-  ctaBtn.addEventListener('click', (e) => {
-    e.preventDefault();
-    if (isUserLoggedIn) {
-      userPortal.classList.add('open');
-    } else {
-      authModal.style.display = 'flex';
-    }
-  });
+  ctaBtn.addEventListener('click', handlePortalOpen);
 }
+
+document.addEventListener('click', (e) => {
+  if (e.target && e.target.id === 'startedPortalBtn') {
+    handlePortalOpen(e);
+  }
+});
 
 // Cerrar Modal
 closeAuth.addEventListener('click', () => { authModal.style.display = 'none'; });

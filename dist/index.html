@@ -17,8 +17,8 @@
 
   <!-- Scripts -->
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
-  <script type="module" crossorigin src="/assets/index-D_J-Rx5z.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/index-Bn7ngU1E.css">
+  <script type="module" crossorigin src="/assets/index-Dibue6fj.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-BccWjl9i.css">
 </head>
 
 <body>
@@ -197,26 +197,37 @@
          COUNTDOWN
     ══════════════════════════ -->
     <section id="countdown" aria-label="Cuenta regresiva">
-      <p class="cd-eyebrow r">FALTAN PARA LA NOCHE</p>
-      <div class="cd-grid r d1">
-        <div class="cd-item">
-          <div class="cd-num" id="cdD">--</div>
-          <div class="cd-unit">DÍAS</div>
+      <div id="countdownActive">
+        <p class="cd-eyebrow r">FALTAN PARA LA NOCHE</p>
+        <div class="cd-grid r d1">
+          <div class="cd-item">
+            <div class="cd-num" id="cdD">--</div>
+            <div class="cd-unit">DÍAS</div>
+          </div>
+          <div class="cd-sep">·</div>
+          <div class="cd-item">
+            <div class="cd-num" id="cdH">--</div>
+            <div class="cd-unit">HORAS</div>
+          </div>
+          <div class="cd-sep">·</div>
+          <div class="cd-item">
+            <div class="cd-num" id="cdM">--</div>
+            <div class="cd-unit">MIN</div>
+          </div>
+          <div class="cd-sep">·</div>
+          <div class="cd-item">
+            <div class="cd-num" id="cdS">--</div>
+            <div class="cd-unit">SEG</div>
+          </div>
         </div>
-        <div class="cd-sep">·</div>
-        <div class="cd-item">
-          <div class="cd-num" id="cdH">--</div>
-          <div class="cd-unit">HORAS</div>
-        </div>
-        <div class="cd-sep">·</div>
-        <div class="cd-item">
-          <div class="cd-num" id="cdM">--</div>
-          <div class="cd-unit">MIN</div>
-        </div>
-        <div class="cd-sep">·</div>
-        <div class="cd-item">
-          <div class="cd-num" id="cdS">--</div>
-          <div class="cd-unit">SEG</div>
+      </div>
+      <div id="countdownFinished" style="display: none;">
+        <div class="event-started-card r">
+          <div class="started-pulse"></div>
+          <p class="started-eyebrow">SISTEMA DE ACCESO ACTIVO</p>
+          <h2 class="started-title">EL MOMENTO HA LLEGADO</h2>
+          <p class="started-desc">Las puertas de <strong>THE LIST</strong> están abiertas.<br>Presenta tu código QR en la entrada para ingresar.</p>
+          <button id="startedPortalBtn" class="started-btn">MOSTRAR MI BOLETO</button>
         </div>
       </div>
     </section>
