@@ -155,7 +155,7 @@ const initHeroAnimations = () => {
 
 // ── COUNTDOWN LOGIC ──
 const startCountdown = () => {
-  const target = new Date("2026-05-29T20:00:00").getTime();
+  const target = new Date("2026-05-29T21:00:00").getTime();
 
   const update = () => {
     const now = new Date().getTime();
